@@ -18,12 +18,13 @@ async def strtCap(bot, message):
     keyboard = InlineKeyboardMarkup(
         [
             [
-                InlineKeyboardButton("M", callback_data="m"),
-                InlineKeyboardButton("A", callback_data="a"),
-                InlineKeyboardButton("S", callback_data="s"),
-                InlineKeyboardButton("T", callback_data="t"),
-                InlineKeyboardButton("E", callback_data="e"),
-                InlineKeyboardButton("R", callback_data="r")
+                InlineKeyboardButton("Y", url="https://t.me/Yae_X_Miko"),
+                InlineKeyboardButton("A", url="https://t.me/Yae_X_Miko"),
+                InlineKeyboardButton("E", url="https://t.me/Yae_X_Miko"),
+                InlineKeyboardButton("M", url="https://t.me/Yae_X_Miko"),
+                InlineKeyboardButton("I", url="https://t.me/Yae_X_Miko"),
+                InlineKeyboardButton("K", url="https://t.me/Yae_X_Miko"),
+                InlineKeyboardButton("O", url="https://t.me/Yae_X_Miko")
             ],
             [
                 InlineKeyboardButton("🔥 MAKE ME YOURS 🔥", url=f"https://t.me/CustomCaptionBot?startchannel=true"),
@@ -42,20 +43,6 @@ Add me to your channel as admin and start posting ⚡️
 Hey {message.from_user.mention}! Ready to make your captions awesome? 🚀</b>""",
         reply_markup=keyboard
     )
-
-@Client.on_callback_query(filters.regex(r'^[master]'))
-async def master_callback(bot, query):
-    letters = {
-        "m": "M",
-        "a": "A", 
-        "s": "S",
-        "t": "T",
-        "e": "E",
-        "r": "R"
-    }
-    
-    letter = letters.get(query.data, "?")
-    await query.answer(f"You clicked: {letter}", show_alert=True)
 
 @Client.on_message(filters.private & filters.user(ADMIN) & filters.command(["total_users"]))
 async def all_db_users_here(client, message):
