@@ -6,6 +6,45 @@ from .database import *
 import re
 import sys
 import time
+import os
+from pyrogram.errors import FloodWait
+from pyrogram.types import *
+from pyrogram import errors
+
+@Client.on_message(filters.command("start") & filters.private)
+async def strtCap(bot, message):
+    user_id = int(message.from_user.id)
+    await insert(user_id)
+    keyboard = InlineKeyboardMarkup(
+        [
+            [
+                InlineKeyboardButton("➕️ ᴀᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ ᴄʜᴀɴɴᴇʟ ➕️", url=f"https://t.me/CustomCaptionBot?startchannel=true")
+            ],[
+                InlineKeyboardButton("Hᴇʟᴘ", callback_data="help"),
+                InlineKeyboardButton("Aʙᴏᴜᴛ", callback_data="about")
+            ],[
+                InlineKeyboardButton("🌐 Uᴘᴅᴀᴛᴇ", url=f"https://t.me/Silicon_Bot_Update"),
+                InlineKeyboardButton("📜 Sᴜᴘᴘᴏʀᴛ", url=r"https://t.me/Silicon_Botz")
+        ]]
+    )
+    await message.reply_photo(
+        photo=SILICON_PIC,
+        caption=f"<b>Hᴇʟʟᴏ {message.from_user.mention}\n\nɪ ᴀᴍ ᴀᴜᴛᴏ ᴄᴀᴘᴛɪᴏɴ ʙᴏᴛ ᴡɪᴛʜ ᴄᴜsᴛᴏᴍ ᴄᴀᴘᴛɪᴏɴ ᴀɴᴅ ʀᴀɴᴅᴏᴍ ᴄᴀᴘᴛɪᴏɴ ꜰᴇᴀᴛᴜʀᴇ.\n\nFᴏʀ ᴍᴏʀᴇ ɪɴғᴏ ʜᴏᴡ ᴛᴏ ᴜsᴇ ᴍᴇ ᴄʟɪᴄᴋ ᴏɴ ʜᴇʟᴘ ʙᴜᴛᴛᴏɴ ɢɪᴠᴇɴ ʙᴇʟᴏᴡ.\n\nMᴀɪɴᴛᴀɪɴᴇᴅ ʙʏ »<a href='https://t.me/Silicon_Bot_Update'>Sɪʟɪᴄᴏɴ Bᴏᴛᴢ</a></b>",
+        reply_markup=keyboard
+    )
+
+@Client.on_message(filters.private** file with the corrected logic:
+
+```python
+from pyrogram import *
+from info import *
+import asyncio
+from Script import script
+from .database import *
+import re
+import sys
+import time
+import os
 from pyrogram.errors import FloodWait
 from pyrogram.types import *
 from pyrogram import errors
@@ -36,9 +75,12 @@ async def strtCap(bot, message):
 async def all_db_users_here(client,message):
     silicon = await message.reply_text("Please Wait....")
     silicon_botz = await total_user()
-    enabled_users = await total_enabled_users()
-    disabled_users = await total_disabled_users()
-    await silicon.edit(f"**📊 User Statistics:**\n\n• Total Users: `{silicon_botz}`\n• Bot Enabled: `{enabled_users}`\n• Bot Disabled: `{disabled_users}`")
+    try:
+        enabled_users = await total_enabled_users()
+        disabled_users = await total_disabled_users()
+        await silicon.edit(f"**📊 User Statistics:**\n\n• Total Users: `{silicon_botz}`\n• Bot Enabled: `{enabled_users}`\n• Bot Disabled: `{disabled_users}`")
+    except:
+        await silicon.edit(f"Tᴏᴛᴀʟ Usᴇʀ :- `{silicon_botz}`")
 
 @Client.on_message(filters.private & filters.user(ADMIN) & filters.command(["broadcast"]))
 async def broadcast(bot, message):
@@ -191,62 +233,78 @@ async def preview_captions_cmd(bot, message):
     preview_text += f"**Total Captions Available:** `{len(captions)}`"
     await loading.edit(preview_text)
 
-# Main Caption Processing - WITH PER-USER ON/OFF CONTROL
+# Main Caption Processing - FIXED VERSION
 @Client.on_message(filters.channel | filters.group)
 async def reCap(bot, message):
-    # Get user ID from message
-    user_id = None
-    if message.from_user:
-        user_id = message.from_user.id
-    elif message.sender_chat:
-        # For channel posts, we can't get individual user ID
-        # You may want to handle this differently based on your needs
-        return
-    
-    if not user_id:
-        return
-    
-    # Check if bot is enabled for this specific user
-    user_bot_enabled = await get_user_bot_status(user_id)
-    if not user_bot_enabled:
-        return  # Bot is OFF for this user, don't process captions
-    
-    default_caption = message.caption or ""
-    
-    # Check if message has any media
-    media_obj = None
-    media_type = "Unknown"
-    
-    if message.photo:
-        media_obj = message.photo
-        media_type = "Photo"
-    elif message.video:
-        media_obj = message.video
-        media_type = "Video"
-    elif message.audio:
-        media_obj = message.audio
-        media_type = "Audio"
-    elif message.document:
-        media_obj = message.document
-        media_type = "Document"
-    elif message.voice:
-        media_obj = message.voice
-        media_type = "Voice"
-    elif message.video_note:
-        media_obj = message.video_note
-        media_type = "Video Note"
-    elif message.animation:
-        media_obj = message.animation
-        media_type = "GIF"
-    elif message.sticker:
-        media_obj = message.sticker
-        media_type = "Sticker"
-    
-    # Process media if found
-    if media_obj:
-        try:
+    try:
+        # Debug: Print message info
+        print(f"Processing message in: {message.chat.title if message.chat else 'Unknown'}")
+        
+        # Get user/channel ID for bot status check
+        user_id = None
+        if message.from_user:
+            user_id = message.from_user.id
+            print(f"Message from user: {user_id}")
+        elif message.sender_chat:
+            user_id = message.sender_chat.id
+            print(f"Message from channel: {user_id}")
+        else:
+            # For anonymous channel posts or when no user info available
+            # Use a default behavior or skip user-specific check
+            print("No user info available, processing anyway...")
+            user_id = message.chat.id  # Use chat ID as fallback
+        
+        # Check if bot is enabled for this user/channel (if user_id exists)
+        if user_id:
+            try:
+                user_bot_enabled = await get_user_bot_status(user_id)
+                if not user_bot_enabled:
+                    print(f"Bot disabled for user/channel: {user_id}")
+                    return
+            except Exception as e:
+                print(f"Error checking bot status for {user_id}: {e}")
+                # If error checking status, assume enabled
+                pass
+        
+        # Get original caption
+        default_caption = message.caption or ""
+        
+        # Check if message has media
+        media_found = False
+        media_type = "Unknown"
+        
+        if message.photo:
+            media_found = True
+            media_type = "Photo"
+        elif message.video:
+            media_found = True
+            media_type = "Video"
+        elif message.audio:
+            media_found = True
+            media_type = "Audio"
+        elif message.document:
+            media_found = True
+            media_type = "Document"
+        elif message.voice:
+            media_found = True
+            media_type = "Voice"
+        elif message.video_note:
+            media_found = True
+            media_type = "Video Note"
+        elif message.animation:
+            media_found = True
+            media_type = "GIF"
+        elif message.sticker:
+            media_found = True
+            media_type = "Sticker"
+        
+        print(f"Media found: {media_found}, Type: {media_type}")
+        
+        # Process media if found
+        if media_found:
             # Get random caption from database
             random_caption = await get_random_caption()
+            print(f"Random caption: {random_caption[:50] if random_caption else 'None'}...")
             
             # If random caption exists, combine it with original
             if random_caption:
@@ -256,15 +314,23 @@ async def reCap(bot, message):
                 else:
                     final_caption = random_caption
                 
+                print(f"Final caption length: {len(final_caption)}")
+                
                 # Edit the message with new caption
                 await message.edit_caption(final_caption)
+                print("Caption edited successfully!")
+            else:
+                print("No random caption available in database")
+        else:
+            print("No media found, skipping...")
             
-        except FloodWait as e:
-            await asyncio.sleep(e.x)
-        except Exception as e:
-            print(f"Error processing media for user {user_id}: {e}")
-    
-    return
+    except FloodWait as e:
+        print(f"FloodWait error: {e.x} seconds")
+        await asyncio.sleep(e.x)
+    except Exception as e:
+        print(f"Error processing message: {e}")
+        import traceback
+        traceback.print_exc()
 
 # Callback Query Handlers
 @Client.on_callback_query(filters.regex(r'^start'))
