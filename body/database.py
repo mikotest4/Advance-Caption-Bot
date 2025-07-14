@@ -2,14 +2,11 @@ import motor.motor_asyncio
 from info import *
 import random
 from datetime import datetime
-import re
 
 client = motor.motor_asyncio.AsyncIOMotorClient(MONGO_DB)
 db = client.captions_with_chnl
 users = db.users
 random_captions = db.random_captions
-user_settings = db.user_settings
-user_filters = db.user_filters
 
 # User Functions
 async def insert(user_id):
@@ -29,53 +26,6 @@ async def getid():
 
 async def delete(id):
     await users.delete_one(id)
-
-# User-Specific Bot Settings Functions
-async def get_user_bot_status(user_id):
-    """Get bot status for specific user"""
-    try:
-        user_setting = await user_settings.find_one({"_id": user_id})
-        if user_setting:
-            return user_setting.get("bot_enabled", True)
-        else:
-            await user_settings.insert_one({
-                "_id": user_id, 
-                "bot_enabled": True,
-                "created_at": datetime.now()
-            })
-            return True
-    except Exception as e:
-        print(f"Error getting user bot status: {e}")
-        return True
-
-async def set_user_bot_status(user_id, enabled):
-    """Set bot status for specific user"""
-    try:
-        await user_settings.update_one(
-            {"_id": user_id},
-            {"$set": {
-                "bot_enabled": enabled,
-                "updated_at": datetime.now()
-            }},
-            upsert=True
-        )
-        return True
-    except Exception as e:
-        print(f"Error setting user bot status: {e}")
-        return False
-
-async def get_default_bot_status():
-    """Get default bot status for new users"""
-    return True
-
-# Old global functions kept for backward compatibility
-async def get_bot_status():
-    """Get global bot status (deprecated)"""
-    return True
-
-async def set_bot_status(enabled):
-    """Set global bot status (deprecated)"""
-    return True
 
 # Random Caption Functions
 async def add_random_caption(caption_text):
@@ -126,81 +76,3 @@ async def total_random_captions():
 async def clear_all_random_captions():
     """Clear all random captions"""
     await random_captions.delete_many({})
-
-# Additional helper functions for user settings
-async def get_all_user_settings():
-    """Get all user settings for admin purposes"""
-    settings = []
-    async for setting in user_settings.find({}):
-        settings.append(setting)
-    return settings
-
-async def total_enabled_users():
-    """Get count of users who have bot enabled"""
-    count = await user_settings.count_documents({"bot_enabled": True})
-    return count
-
-async def total_disabled_users():
-    """Get count of users who have bot disabled"""
-    count = await user_settings.count_documents({"bot_enabled": False})
-    return count
-
-# User Filter Functions
-async def add_user_filter(user_id, words):
-    """Add filtered words for specific user"""
-    try:
-        filtered_words = [word.strip().lower() for word in words if word.strip()]
-        
-        await user_filters.update_one(
-            {"_id": user_id},
-            {"$set": {
-                "filtered_words": filtered_words,
-                "updated_at": datetime.now()
-            }},
-            upsert=True
-        )
-        return True
-    except Exception as e:
-        print(f"Error adding user filter: {e}")
-        return False
-
-async def get_user_filters(user_id):
-    """Get filtered words for specific user"""
-    try:
-        user_filter = await user_filters.find_one({"_id": user_id})
-        if user_filter:
-            return user_filter.get("filtered_words", [])
-        else:
-            return []
-    except Exception as e:
-        print(f"Error getting user filters: {e}")
-        return []
-
-async def clear_user_filters(user_id):
-    """Clear all filtered words for specific user"""
-    try:
-        await user_filters.delete_one({"_id": user_id})
-        return True
-    except Exception as e:
-        print(f"Error clearing user filters: {e}")
-        return False
-
-def remove_filtered_words(text, filtered_words):
-    """Remove filtered words from text"""
-    if not text or not filtered_words:
-        return text
-    
-    cleaned_text = text
-    
-    for word in filtered_words:
-        pattern = r'\b' + re.escape(word) + r'\b'
-        cleaned_text = re.sub(pattern, '', cleaned_text, flags=re.IGNORECASE)
-    
-    cleaned_text = re.sub(r'\s+', ' ', cleaned_text).strip()
-    
-    return cleaned_text
-
-async def total_users_with_filters():
-    """Get count of users who have word filters set"""
-    count = await user_filters.count_documents({})
-    return count
