@@ -40,7 +40,8 @@ async def all_db_users_here(client, message):
     try:
         enabled_users = await total_enabled_users()
         disabled_users = await total_disabled_users()
-        await silicon.edit(f"**📊 User Statistics:**\n\n• Total Users: `{silicon_botz}`\n• Bot Enabled: `{enabled_users}`\n• Bot Disabled: `{disabled_users}`")
+        filter_users = await total_users_with_filters()
+        await silicon.edit(f"**📊 User Statistics:**\n\n• Total Users: `{silicon_botz}`\n• Bot Enabled: `{enabled_users}`\n• Bot Disabled: `{disabled_users}`\n• Users with Filters: `{filter_users}`")
     except:
         await silicon.edit(f"Tᴏᴛᴀʟ Usᴇʀ :- `{silicon_botz}`")
 
@@ -191,6 +192,53 @@ async def preview_captions_cmd(bot, message):
     preview_text += f"**Total Captions Available:** `{len(captions)}`"
     await loading.edit(preview_text)
 
+# NEW: Word Filter Commands
+@Client.on_message(filters.command("del"))
+async def del_words_cmd(bot, message):
+    user_id = message.from_user.id
+    
+    if len(message.command) < 2:
+        return await message.reply("**Usage:** `/del word1, word2, word3`\n\n**Example:** `/del alok, spam, delete`")
+    
+    # Get the words from command
+    words_text = message.text.split(" ", 1)[1]
+    words = [word.strip() for word in words_text.split(",")]
+    
+    # Remove empty words
+    words = [word for word in words if word]
+    
+    if not words:
+        return await message.reply("**❌ No valid words found!**\n\n**Usage:** `/del word1, word2, word3`")
+    
+    success = await add_user_filter(user_id, words)
+    
+    if success:
+        words_str = ", ".join(words)
+        await message.reply(f"**✅ Words added to filter successfully!**\n\n**Filtered Words:** {words_str}\n\n**Note:** These words will be removed from your captions automatically.")
+    else:
+        await message.reply("**❌ Failed to add words to filter. Please try again.**")
+
+@Client.on_message(filters.command("del_list"))
+async def del_list_cmd(bot, message):
+    user_id = message.from_user.id
+    filtered_words = await get_user_filters(user_id)
+    
+    if not filtered_words:
+        await message.reply("**📝 No filtered words found!**\n\nUse `/del word1, word2` to add words to filter.")
+    else:
+        words_str = ", ".join(filtered_words)
+        await message.reply(f"**📝 Your Filtered Words:**\n\n{words_str}\n\n**Note:** These words are automatically removed from your captions.")
+
+@Client.on_message(filters.command("del_clear"))
+async def del_clear_cmd(bot, message):
+    user_id = message.from_user.id
+    success = await clear_user_filters(user_id)
+    
+    if success:
+        await message.reply("**✅ All filtered words cleared successfully!**\n\nNo words will be removed from your captions now.")
+    else:
+        await message.reply("**❌ Failed to clear filtered words. Please try again.**")
+
 @Client.on_message(filters.channel | filters.group)
 async def reCap(bot, message):
     try:
@@ -211,6 +259,15 @@ async def reCap(bot, message):
                 pass
         
         default_caption = message.caption or ""
+        
+        # NEW: Apply word filters if user has them
+        if user_id and default_caption:
+            try:
+                filtered_words = await get_user_filters(user_id)
+                if filtered_words:
+                    default_caption = remove_filtered_words(default_caption, filtered_words)
+            except Exception as e:
+                pass
         
         media_found = False
         
