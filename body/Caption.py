@@ -77,8 +77,8 @@ async def restart_bot(b, m):
     await silicon.edit("**✅️ 𝙱𝙾𝚃 𝙸𝚂 𝚁𝙴𝚂𝚃𝙰𝚁𝚃𝙴𝙳. 𝙽𝙾𝚆 𝚈𝙾𝚄 𝙲𝙰𝙽 𝚄𝚂𝙴 𝙼𝙴**")
     os.execl(sys.executable, sys.executable, *sys.argv)
 
-# Bot ON/OFF Commands - ONLY ADMIN
-@Client.on_message(filters.private & filters.user(ADMIN) & filters.command("bot_on"))
+# Bot ON/OFF Commands - ANYONE CAN USE
+@Client.on_message(filters.command("bot_on"))
 async def bot_on_cmd(bot, message):
     success = await set_bot_status(True)
     if success:
@@ -86,7 +86,7 @@ async def bot_on_cmd(bot, message):
     else:
         await message.reply("**❌ Failed to turn ON the bot. Please try again.**")
 
-@Client.on_message(filters.private & filters.user(ADMIN) & filters.command("bot_off"))
+@Client.on_message(filters.command("bot_off"))
 async def bot_off_cmd(bot, message):
     success = await set_bot_status(False)
     if success:
@@ -140,7 +140,7 @@ async def list_captions_cmd(bot, message):
         await loading.edit(caption_text)
 
 @Client.on_message(filters.private & filters.user(ADMIN) & filters.command("total_captions"))
-async def total_captions_cmd(bot, message):
+async def admin_total_captions_cmd(bot, message):
     total = await total_random_captions()
     await message.reply(f"**📊 Total Random Captions:** `{total}`")
 
