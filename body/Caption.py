@@ -33,46 +33,8 @@ async def strtCap(bot, message):
         reply_markup=keyboard
     )
 
-@Client.on_message(filters.private** file with the corrected logic:
-
-```python
-from pyrogram import *
-from info import *
-import asyncio
-from Script import script
-from .database import *
-import re
-import sys
-import time
-import os
-from pyrogram.errors import FloodWait
-from pyrogram.types import *
-from pyrogram import errors
-
-@Client.on_message(filters.command("start") & filters.private)
-async def strtCap(bot, message):
-    user_id = int(message.from_user.id)
-    await insert(user_id)
-    keyboard = InlineKeyboardMarkup(
-        [
-            [
-                InlineKeyboardButton("➕️ ᴀᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ ᴄʜᴀɴɴᴇʟ ➕️", url=f"https://t.me/CustomCaptionBot?startchannel=true")
-            ],[
-                InlineKeyboardButton("Hᴇʟᴘ", callback_data="help"),
-                InlineKeyboardButton("Aʙᴏᴜᴛ", callback_data="about")
-            ],[
-                InlineKeyboardButton("🌐 Uᴘᴅᴀᴛᴇ", url=f"https://t.me/Silicon_Bot_Update"),
-                InlineKeyboardButton("📜 Sᴜᴘᴘᴏʀᴛ", url=r"https://t.me/Silicon_Botz")
-        ]]
-    )
-    await message.reply_photo(
-        photo=SILICON_PIC,
-        caption=f"<b>Hᴇʟʟᴏ {message.from_user.mention}\n\nɪ ᴀᴍ ᴀᴜᴛᴏ ᴄᴀᴘᴛɪᴏɴ ʙᴏᴛ ᴡɪᴛʜ ᴄᴜsᴛᴏᴍ ᴄᴀᴘᴛɪᴏɴ ᴀɴᴅ ʀᴀɴᴅᴏᴍ ᴄᴀᴘᴛɪᴏɴ ꜰᴇᴀᴛᴜʀᴇ.\n\nFᴏʀ ᴍᴏʀᴇ ɪɴғᴏ ʜᴏᴡ ᴛᴏ ᴜsᴇ ᴍᴇ ᴄʟɪᴄᴋ ᴏɴ ʜᴇʟᴘ ʙᴜᴛᴛᴏɴ ɢɪᴠᴇɴ ʙᴇʟᴏᴡ.\n\nMᴀɪɴᴛᴀɪɴᴇᴅ ʙʏ »<a href='https://t.me/Silicon_Bot_Update'>Sɪʟɪᴄᴏɴ Bᴏᴛᴢ</a></b>",
-        reply_markup=keyboard
-    )
-
-@Client.on_message(filters.private & filters.user(ADMIN)  & filters.command(["total_users"]))
-async def all_db_users_here(client,message):
+@Client.on_message(filters.private & filters.user(ADMIN) & filters.command(["total_users"]))
+async def all_db_users_here(client, message):
     silicon = await message.reply_text("Please Wait....")
     silicon_botz = await total_user()
     try:
@@ -99,10 +61,10 @@ async def broadcast(bot, message):
                 await message.reply_to_message.copy(user['_id'])
                 success += 1
             except errors.InputUserDeactivated:
-                deactivated +=1
+                deactivated += 1
                 await delete({"_id": user['_id']})
             except errors.UserIsBlocked:
-                blocked +=1
+                blocked += 1
                 await delete({"_id": user['_id']})
             except Exception as e:
                 failed += 1
@@ -116,12 +78,11 @@ async def broadcast(bot, message):
 
 @Client.on_message(filters.private & filters.user(ADMIN) & filters.command("restart"))
 async def restart_bot(b, m):
-    silicon = await b.send_message(text="**🔄 𝙿𝚁𝙾𝙲𝙴𝚂𝚂𝙴𝚂 𝚂𝚃𝙾𝙿𝙴𝙳. 𝙱𝙾𝚃 𝙸𝚂 𝚁𝙴𝚂𝚃𝙰𝚁𝚃𝙸𝙽𝙶...**", chat_id=m.chat.id)       
+    silicon = await b.send_message(text="**🔄 𝙿𝚁𝙾𝙲𝙴𝚂𝚂𝙴𝚂 𝚂𝚃𝙾𝙿𝙴𝙳. 𝙱𝙾𝚃 𝙸𝚂 𝚁𝙴𝚂𝚃𝙰𝚁𝚃𝙸𝙽𝙶...**", chat_id=m.chat.id)
     await asyncio.sleep(3)
     await silicon.edit("**✅️ 𝙱𝙾𝚃 𝙸𝚂 𝚁𝙴𝚂𝚃𝙰𝚁𝚃𝙴𝙳. 𝙽𝙾𝚆 𝚈𝙾𝚄 𝙲𝙰𝙽 𝚄𝚂𝙴 𝙼𝙴**")
     os.execl(sys.executable, sys.executable, *sys.argv)
 
-# Per-User Bot ON/OFF Commands - ANYONE CAN USE FOR THEMSELVES
 @Client.on_message(filters.command("bot_on"))
 async def bot_on_cmd(bot, message):
     user_id = message.from_user.id
@@ -153,7 +114,6 @@ async def bot_status_cmd(bot, message):
     
     await message.reply(status_text)
 
-# Random Caption Commands - ONLY ADMIN CAN MANAGE
 @Client.on_message(filters.private & filters.user(ADMIN) & filters.command("add_caption"))
 async def add_caption_cmd(bot, message):
     if len(message.command) < 2:
@@ -178,7 +138,7 @@ async def list_captions_cmd(bot, message):
         caption_content = caption['caption'][:50] + "..." if len(caption['caption']) > 50 else caption['caption']
         caption_text += f"**{i}.** `{caption_id}`\n{caption_content}\n\n"
         
-        if len(caption_text) > 3500:  # Telegram message limit
+        if len(caption_text) > 3500:
             await loading.edit(caption_text)
             caption_text = ""
             loading = await message.reply("**More captions...**")
@@ -210,7 +170,6 @@ async def clear_captions_cmd(bot, message):
     await clear_all_random_captions()
     await message.reply("**✅ All random captions cleared successfully!**")
 
-# Public Commands - ANY USER CAN USE
 @Client.on_message(filters.command("total_captions"))
 async def public_total_captions(bot, message):
     total = await total_random_captions()
@@ -224,7 +183,6 @@ async def preview_captions_cmd(bot, message):
     if not captions:
         return await loading.edit("**No random captions available!**")
     
-    # Show only first 10 captions as preview
     preview_text = "**📝 Random Captions Preview (First 10):**\n\n"
     for i, caption in enumerate(captions[:10], 1):
         caption_content = caption['caption'][:60] + "..." if len(caption['caption']) > 60 else caption['caption']
@@ -233,14 +191,11 @@ async def preview_captions_cmd(bot, message):
     preview_text += f"**Total Captions Available:** `{len(captions)}`"
     await loading.edit(preview_text)
 
-# Main Caption Processing - FIXED VERSION
 @Client.on_message(filters.channel | filters.group)
 async def reCap(bot, message):
     try:
-        # Debug: Print message info
         print(f"Processing message in: {message.chat.title if message.chat else 'Unknown'}")
         
-        # Get user/channel ID for bot status check
         user_id = None
         if message.from_user:
             user_id = message.from_user.id
@@ -249,12 +204,9 @@ async def reCap(bot, message):
             user_id = message.sender_chat.id
             print(f"Message from channel: {user_id}")
         else:
-            # For anonymous channel posts or when no user info available
-            # Use a default behavior or skip user-specific check
             print("No user info available, processing anyway...")
-            user_id = message.chat.id  # Use chat ID as fallback
+            user_id = message.chat.id
         
-        # Check if bot is enabled for this user/channel (if user_id exists)
         if user_id:
             try:
                 user_bot_enabled = await get_user_bot_status(user_id)
@@ -263,13 +215,10 @@ async def reCap(bot, message):
                     return
             except Exception as e:
                 print(f"Error checking bot status for {user_id}: {e}")
-                # If error checking status, assume enabled
                 pass
         
-        # Get original caption
         default_caption = message.caption or ""
         
-        # Check if message has media
         media_found = False
         media_type = "Unknown"
         
@@ -300,15 +249,11 @@ async def reCap(bot, message):
         
         print(f"Media found: {media_found}, Type: {media_type}")
         
-        # Process media if found
         if media_found:
-            # Get random caption from database
             random_caption = await get_random_caption()
             print(f"Random caption: {random_caption[:50] if random_caption else 'None'}...")
             
-            # If random caption exists, combine it with original
             if random_caption:
-                # Format: Random Caption + Original Caption
                 if default_caption:
                     final_caption = f"{random_caption}\n\n{default_caption}"
                 else:
@@ -316,7 +261,6 @@ async def reCap(bot, message):
                 
                 print(f"Final caption length: {len(final_caption)}")
                 
-                # Edit the message with new caption
                 await message.edit_caption(final_caption)
                 print("Caption edited successfully!")
             else:
@@ -332,15 +276,14 @@ async def reCap(bot, message):
         import traceback
         traceback.print_exc()
 
-# Callback Query Handlers
 @Client.on_callback_query(filters.regex(r'^start'))
 async def start(bot, query):
     await query.message.edit_text(
-        text=script.START_TXT.format(query.from_user.mention),  
+        text=script.START_TXT.format(query.from_user.mention),
         reply_markup=InlineKeyboardMarkup(
             [[
                 InlineKeyboardButton("➕️ ᴀᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ ᴄʜᴀɴɴᴇʟ ➕️", url=f"http://t.me/CustomCaptionBot?startchannel=true")
-                ],[
+            ],[
                 InlineKeyboardButton("Hᴇʟᴘ", callback_data="help"),
                 InlineKeyboardButton("Aʙᴏᴜᴛ", callback_data="about")
             ],[
@@ -357,12 +300,12 @@ async def help(bot, query):
         text=script.HELP_TXT,
         reply_markup=InlineKeyboardMarkup(
             [[
-            InlineKeyboardButton('About', callback_data='about')
+                InlineKeyboardButton('About', callback_data='about')
             ],[
-            InlineKeyboardButton('↩ ʙᴀᴄᴋ', callback_data='start')
+                InlineKeyboardButton('↩ ʙᴀᴄᴋ', callback_data='start')
             ]]
         ),
-        disable_web_page_preview=True    
+        disable_web_page_preview=True
     )
 
 @Client.on_callback_query(filters.regex(r'^about'))
@@ -371,9 +314,9 @@ async def about(bot, query):
         text=script.ABOUT_TXT,
         reply_markup=InlineKeyboardMarkup(
             [[
-            InlineKeyboardButton('Help', callback_data='help')
+                InlineKeyboardButton('Help', callback_data='help')
             ],[
-            InlineKeyboardButton('↩ ʙᴀᴄᴋ', callback_data='start')
+                InlineKeyboardButton('↩ ʙᴀᴄᴋ', callback_data='start')
             ]]
         ),
         disable_web_page_preview=True
