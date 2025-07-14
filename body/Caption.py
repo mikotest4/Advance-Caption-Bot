@@ -32,13 +32,7 @@ async def strtCap(bot, message):
 async def all_db_users_here(client, message):
     silicon = await message.reply_text("Please Wait....")
     silicon_botz = await total_user()
-    try:
-        enabled_users = await total_enabled_users()
-        disabled_users = await total_disabled_users()
-        filter_users = await total_users_with_filters()
-        await silicon.edit(f"**📊 User Statistics:**\n\n• Total Users: `{silicon_botz}`\n• Bot Enabled: `{enabled_users}`\n• Bot Disabled: `{disabled_users}`\n• Users with Filters: `{filter_users}`")
-    except:
-        await silicon.edit(f"Tᴏᴛᴀʟ Usᴇʀ :- `{silicon_botz}`")
+    await silicon.edit(f"Tᴏᴛᴀʟ Usᴇʀ :- `{silicon_botz}`")
 
 @Client.on_message(filters.private & filters.user(ADMIN) & filters.command(["broadcast"]))
 async def broadcast(bot, message):
@@ -186,13 +180,18 @@ async def reCap(bot, message):
             random_caption = await get_random_caption()
             
             if random_caption:
+                # Make random caption bold
+                bold_random_caption = f"<b>{random_caption}</b>"
+                
                 # Combine captions
                 if default_caption:
-                    final_caption = f"{random_caption}\n\n{default_caption}"
+                    # Make original caption bold too
+                    bold_default_caption = f"<b>{default_caption}</b>"
+                    final_caption = f"{bold_random_caption}\n\n{bold_default_caption}"
                 else:
-                    final_caption = random_caption
+                    final_caption = bold_random_caption
                 
-                # Edit the message with new caption
+                # Edit the message with new bold caption
                 await message.edit_caption(final_caption)
             
     except FloodWait as e:
