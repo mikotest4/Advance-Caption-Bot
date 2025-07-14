@@ -4,8 +4,11 @@ import asyncio
 from Script import script
 from .database import *
 import re
+import sys
+import time
 from pyrogram.errors import FloodWait
 from pyrogram.types import *
+from pyrogram import errors
 
 @Client.on_message(filters.command("start") & filters.private)
 async def strtCap(bot, message):
@@ -25,7 +28,7 @@ async def strtCap(bot, message):
     )
     await message.reply_photo(
         photo=SILICON_PIC,
-        caption=f"<b>Hᴇʟʟᴏ {message.from_user.mention}\n\nɪ ᴀᴍ ᴀᴜᴛᴏ ᴄᴀᴘᴛɪᴏɴ ʙᴏᴛ ᴡɪᴛʜ ᴄᴜsᴛᴏᴍ ᴄᴀᴘᴛɪᴏɴ.\n\nFᴏʀ ᴍᴏʀᴇ ɪɴғᴏ ʜᴏᴡ ᴛᴏ ᴜsᴇ ᴍᴇ ᴄʟɪᴄᴋ ᴏɴ ʜᴇʟᴘ ʙᴜᴛᴛᴏɴ ɢɪᴠᴇɴ ʙᴇʟᴏᴡ.\n\nMᴀɪɴᴛᴀɪɴᴇᴅ ʙʏ »<a href='https://t.me/Silicon_Bot_Update'>Sɪʟɪᴄᴏɴ Bᴏᴛᴢ</a></b>",
+        caption=f"<b>Hᴇʟʟᴏ {message.from_user.mention}\n\nɪ ᴀᴍ ᴀᴜᴛᴏ ᴄᴀᴘᴛɪᴏɴ ʙᴏᴛ ᴡɪᴛʜ ᴄᴜsᴛᴏᴍ ᴄᴀᴘᴛɪᴏɴ ᴀɴᴅ ʀᴀɴᴅᴏᴍ ᴄᴀᴘᴛɪᴏɴ ꜰᴇᴀᴛᴜʀᴇ.\n\nFᴏʀ ᴍᴏʀᴇ ɪɴғᴏ ʜᴏᴡ ᴛᴏ ᴜsᴇ ᴍᴇ ᴄʟɪᴄᴋ ᴏɴ ʜᴇʟᴘ ʙᴜᴛᴛᴏɴ ɢɪᴠᴇɴ ʙᴇʟᴏᴡ.\n\nMᴀɪɴᴛᴀɪɴᴇᴅ ʙʏ »<a href='https://t.me/Silicon_Bot_Update'>Sɪʟɪᴄᴏɴ Bᴏᴛᴢ</a></b>",
         reply_markup=keyboard
     )
 
@@ -64,7 +67,7 @@ async def broadcast(bot, message):
             try:
                 await silicon.edit(f"<u>ʙʀᴏᴀᴅᴄᴀsᴛ ᴘʀᴏᴄᴇssɪɴɢ</u>\n\n• ᴛᴏᴛᴀʟ ᴜsᴇʀs: {tot}\n• sᴜᴄᴄᴇssғᴜʟ: {success}\n• ʙʟᴏᴄᴋᴇᴅ ᴜsᴇʀs: {blocked}\n• ᴅᴇʟᴇᴛᴇᴅ ᴀᴄᴄᴏᴜɴᴛs: {deactivated}\n• ᴜɴsᴜᴄᴄᴇssғᴜʟ: {failed}")
             except FloodWait as e:
-                await asyncio.sleep(t.x)
+                await asyncio.sleep(e.x)
         await silicon.edit(f"<u>ʙʀᴏᴀᴅᴄᴀsᴛ ᴄᴏᴍᴘʟᴇᴛᴇᴅ</u>\n\n• ᴛᴏᴛᴀʟ ᴜsᴇʀs: {tot}\n• sᴜᴄᴄᴇssғᴜʟ: {success}\n• ʙʟᴏᴄᴋᴇᴅ ᴜsᴇʀs: {blocked}\n• ᴅᴇʟᴇᴛᴇᴅ ᴀᴄᴄᴏᴜɴᴛs: {deactivated}\n• ᴜɴsᴜᴄᴄᴇssғᴜʟ: {failed}")
 
 @Client.on_message(filters.private & filters.user(ADMIN) & filters.command("restart"))
@@ -74,6 +77,7 @@ async def restart_bot(b, m):
     await silicon.edit("**✅️ 𝙱𝙾𝚃 𝙸𝚂 𝚁𝙴𝚂𝚃𝙰𝚁𝚃𝙴𝙳. 𝙽𝙾𝚆 𝚈𝙾𝚄 𝙲𝙰𝙽 𝚄𝚂𝙴 𝙼𝙴**")
     os.execl(sys.executable, sys.executable, *sys.argv)
 
+# Original Caption Commands
 @Client.on_message(filters.command("set_cap") & filters.channel)
 async def setCap(bot, message):
     if len(message.command) < 2:
@@ -99,13 +103,71 @@ async def delCap(_, msg):
         await chnl_ids.delete_one({"chnl_id": chnl_id})
         return await msg.reply("<b><i>✓ Sᴜᴄᴄᴇssғᴜʟʟʏ... Dᴇʟᴇᴛᴇᴅ Yᴏᴜʀ Cᴀᴘᴛɪᴏɴ Nᴏᴡ I ᴀᴍ Usɪɴɢ Mʏ Dᴇғᴀᴜʟᴛ Cᴀᴘᴛɪᴏɴ </i></b>")
     except Exception as e:
-        e_val = await msg.replay(f"ERR I GOT: {e}")
+        e_val = await msg.reply(f"ERR I GOT: {e}")
         await asyncio.sleep(5)
         await e_val.delete()
         return
 
+# New Random Caption Commands
+@Client.on_message(filters.private & filters.user(ADMIN) & filters.command("add_caption"))
+async def add_caption_cmd(bot, message):
+    if len(message.command) < 2:
+        return await message.reply("**Usage:** `/add_caption Your Random Caption Text`")
+    
+    caption_text = message.text.split(" ", 1)[1]
+    await add_random_caption(caption_text)
+    total_caps = await total_random_captions()
+    await message.reply(f"**✅ Caption Added Successfully!**\n\n**Caption:** {caption_text}\n**Total Captions:** {total_caps}")
+
+@Client.on_message(filters.private & filters.user(ADMIN) & filters.command("list_captions"))
+async def list_captions_cmd(bot, message):
+    loading = await message.reply("**Getting all captions...**")
+    captions = await get_all_random_captions()
+    
+    if not captions:
+        return await loading.edit("**No random captions found!**")
+    
+    caption_text = "**📝 All Random Captions:**\n\n"
+    for i, caption in enumerate(captions, 1):
+        caption_id = str(caption['_id'])
+        caption_content = caption['caption'][:50] + "..." if len(caption['caption']) > 50 else caption['caption']
+        caption_text += f"**{i}.** `{caption_id}`\n{caption_content}\n\n"
+        
+        if len(caption_text) > 3500:  # Telegram message limit
+            await loading.edit(caption_text)
+            caption_text = ""
+            loading = await message.reply("**More captions...**")
+    
+    if caption_text:
+        await loading.edit(caption_text)
+
+@Client.on_message(filters.private & filters.user(ADMIN) & filters.command("total_captions"))
+async def total_captions_cmd(bot, message):
+    total = await total_random_captions()
+    await message.reply(f"**📊 Total Random Captions:** `{total}`")
+
+@Client.on_message(filters.private & filters.user(ADMIN) & filters.command("del_caption"))
+async def del_caption_cmd(bot, message):
+    if len(message.command) < 2:
+        return await message.reply("**Usage:** `/del_caption caption_id`")
+    
+    caption_id = message.command[1]
+    success = await delete_random_caption(caption_id)
+    
+    if success:
+        total = await total_random_captions()
+        await message.reply(f"**✅ Caption Deleted Successfully!**\n**Remaining Captions:** {total}")
+    else:
+        await message.reply("**❌ Failed to delete caption. Invalid ID or caption not found.**")
+
+@Client.on_message(filters.private & filters.user(ADMIN) & filters.command("clear_captions"))
+async def clear_captions_cmd(bot, message):
+    await clear_all_random_captions()
+    await message.reply("**✅ All random captions cleared successfully!**")
+
+# Helper Functions
 def extract_language(default_caption):
-    language_pattern = r'\b(Hindi|English|Tamil|Telugu|Malayalam|Kannada|Hin)\b'#Contribute More Language If You Have
+    language_pattern = r'\b(Hindi|English|Tamil|Telugu|Malayalam|Kannada|Hin)\b'
     languages = set(re.findall(language_pattern, default_caption, re.IGNORECASE))
     if not languages:
         return "Hindi-English"
@@ -115,32 +177,62 @@ def extract_year(default_caption):
     match = re.search(r'\b(19\d{2}|20\d{2})\b', default_caption)
     return match.group(1) if match else None
 
+# Main Caption Processing with Random Caption Feature
 @Client.on_message(filters.channel)
 async def reCap(bot, message):
     chnl_id = message.chat.id
     default_caption = message.caption
+    
     if message.media:
         for file_type in ("video", "audio", "document", "voice"):
             obj = getattr(message, file_type, None)
             if obj and hasattr(obj, "file_name"):
                 file_name = obj.file_name
                 file_size = obj.file_size
-                language = extract_language(default_caption)
-                year = extract_year(default_caption)
+                language = extract_language(default_caption) if default_caption else "Hindi-English"
+                year = extract_year(default_caption) if default_caption else None
+                
                 file_name = (
                     re.sub(r"@\w+\s*", "", file_name)
                     .replace("_", " ")
                     .replace(".", " ")
                 )
+                
+                # Get random caption
+                random_caption = await get_random_caption()
+                
+                # Get channel specific caption or use default
                 cap_dets = await chnl_ids.find_one({"chnl_id": chnl_id})
+                
                 try:
+                    # Format file information
+                    file_info = ""
                     if cap_dets:
                         cap = cap_dets["caption"]
-                        replaced_caption = cap.format(file_name=file_name, file_size=get_size(file_size), default_caption=default_caption, language=language, year=year)
-                        await message.edit(replaced_caption)
+                        file_info = cap.format(
+                            file_name=file_name, 
+                            file_size=get_size(file_size), 
+                            default_caption=default_caption or "", 
+                            language=language, 
+                            year=year or ""
+                        )
                     else:
-                        replaced_caption = DEF_CAP.format(file_name=file_name, file_size=get_size(file_size), default_caption=default_caption, language=language, year=year)
-                        await message.edit(replaced_caption)
+                        file_info = DEF_CAP.format(
+                            file_name=file_name, 
+                            file_size=get_size(file_size), 
+                            default_caption=default_caption or "", 
+                            language=language, 
+                            year=year or ""
+                        )
+                    
+                    # Combine random caption with file info
+                    if random_caption:
+                        final_caption = f"{random_caption}\n\n{file_info}"
+                    else:
+                        final_caption = file_info
+                    
+                    await message.edit(final_caption)
+                    
                 except FloodWait as e:
                     await asyncio.sleep(e.x)
                     continue
@@ -151,11 +243,12 @@ def get_size(size):
     units = ["Bytes", "Kʙ", "Mʙ", "Gʙ", "Tʙ", "Pʙ", "Eʙ"]
     size = float(size)
     i = 0
-    while size >= 1024.0 and i < len(units) - 1:  # Changed the condition to stop at the last unit
+    while size >= 1024.0 and i < len(units) - 1:
         i += 1
         size /= 1024.0
     return "%.2f %s" % (size, units[i])
 
+# Callback Query Handlers
 @Client.on_callback_query(filters.regex(r'^start'))
 async def start(bot, query):
     await query.message.edit_text(
@@ -172,7 +265,7 @@ async def start(bot, query):
             ]]
         ),
         disable_web_page_preview=True
-)
+    )
 
 @Client.on_callback_query(filters.regex(r'^help'))
 async def help(bot, query):
@@ -186,8 +279,7 @@ async def help(bot, query):
             ]]
         ),
         disable_web_page_preview=True    
-)
-
+    )
 
 @Client.on_callback_query(filters.regex(r'^about'))
 async def about(bot, query):
@@ -201,6 +293,4 @@ async def about(bot, query):
             ]]
         ),
         disable_web_page_preview=True 
-
-)
-
+    )
