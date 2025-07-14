@@ -87,6 +87,12 @@ async def restart_bot(b, m):
 @Client.on_message(filters.command("bot_on"))
 async def bot_on_cmd(bot, message):
     user_id = message.from_user.id
+    
+    # For channel/group messages, also set for the chat
+    if message.chat.type in ['channel', 'supergroup']:
+        chat_id = message.chat.id
+        await set_user_bot_status(chat_id, True)
+    
     success = await set_user_bot_status(user_id, True)
     if success:
         await message.reply("**✅ Bot is now ON for you!**\n\nAutomatic caption feature is **ENABLED** for your account. Bot will add random captions to your media posts.")
@@ -96,6 +102,12 @@ async def bot_on_cmd(bot, message):
 @Client.on_message(filters.command("bot_off"))
 async def bot_off_cmd(bot, message):
     user_id = message.from_user.id
+    
+    # For channel/group messages, also set for the chat
+    if message.chat.type in ['channel', 'supergroup']:
+        chat_id = message.chat.id
+        await set_user_bot_status(chat_id, False)
+    
     success = await set_user_bot_status(user_id, False)
     if success:
         await message.reply("**🔴 Bot is now OFF for you!**\n\nAutomatic caption feature is **DISABLED** for your account. Bot will not modify your captions.")
@@ -106,12 +118,26 @@ async def bot_off_cmd(bot, message):
 async def bot_status_cmd(bot, message):
     user_id = message.from_user.id
     status = await get_user_bot_status(user_id)
-    total_caps = await total_random_captions()
     
-    if status:
-        status_text = f"**🟢 Your Bot Status: ON**\n\n✅ Automatic caption feature is **ENABLED** for your account\n📊 Total Random Captions: `{total_caps}`"
+    # Also check channel/group status
+    if message.chat.type in ['channel', 'supergroup']:
+        chat_status = await get_user_bot_status(message.chat.id)
+        total_caps = await total_random_captions()
+        
+        if status and chat_status:
+            status_text = f"**🟢 Bot Status: ON**\n\n✅ Both user and chat have bot **ENABLED**\n📊 Total Random Captions: `{total_caps}`"
+        elif status:
+            status_text = f"**🟡 Bot Status: PARTIAL**\n\n✅ User: **ENABLED**\n❌ Chat: **DISABLED**\n📊 Total Random Captions: `{total_caps}`"
+        elif chat_status:
+            status_text = f"**🟡 Bot Status: PARTIAL**\n\n❌ User: **DISABLED**\n✅ Chat: **ENABLED**\n📊 Total Random Captions: `{total_caps}`"
+        else:
+            status_text = f"**🔴 Bot Status: OFF**\n\n❌ Both user and chat have bot **DISABLED**\n📊 Total Random Captions: `{total_caps}`"
     else:
-        status_text = f"**🔴 Your Bot Status: OFF**\n\n❌ Automatic caption feature is **DISABLED** for your account\n📊 Total Random Captions: `{total_caps}`"
+        total_caps = await total_random_captions()
+        if status:
+            status_text = f"**🟢 Your Bot Status: ON**\n\n✅ Automatic caption feature is **ENABLED**\n📊 Total Random Captions: `{total_caps}`"
+        else:
+            status_text = f"**🔴 Your Bot Status: OFF**\n\n❌ Automatic caption feature is **DISABLED**\n📊 Total Random Captions: `{total_caps}`"
     
     await message.reply(status_text)
 
@@ -192,7 +218,6 @@ async def preview_captions_cmd(bot, message):
     preview_text += f"**Total Captions Available:** `{len(captions)}`"
     await loading.edit(preview_text)
 
-# NEW: Word Filter Commands
 @Client.on_message(filters.command("del"))
 async def del_words_cmd(bot, message):
     user_id = message.from_user.id
@@ -200,11 +225,9 @@ async def del_words_cmd(bot, message):
     if len(message.command) < 2:
         return await message.reply("**Usage:** `/del word1, word2, word3`\n\n**Example:** `/del alok, spam, delete`")
     
-    # Get the words from command
     words_text = message.text.split(" ", 1)[1]
     words = [word.strip() for word in words_text.split(",")]
     
-    # Remove empty words
     words = [word for word in words if word]
     
     if not words:
@@ -250,25 +273,26 @@ async def reCap(bot, message):
         else:
             user_id = message.chat.id
         
+        # Check if bot is enabled for this user/channel
         if user_id:
             try:
                 user_bot_enabled = await get_user_bot_status(user_id)
                 if not user_bot_enabled:
-                    return
+                    return  # Bot is OFF for this user, don't process
             except Exception as e:
                 pass
         
         default_caption = message.caption or ""
         
-        # NEW: Apply word filters if user has them
-        if user_id and default_caption:
+        # Get user's filtered words
+        filtered_words = []
+        if user_id:
             try:
                 filtered_words = await get_user_filters(user_id)
-                if filtered_words:
-                    default_caption = remove_filtered_words(default_caption, filtered_words)
             except Exception as e:
                 pass
         
+        # Check if message has media
         media_found = False
         
         if message.photo:
@@ -289,14 +313,22 @@ async def reCap(bot, message):
             media_found = True
         
         if media_found:
+            # Get random caption from database
             random_caption = await get_random_caption()
             
             if random_caption:
+                # Apply word filters to BOTH random caption and original caption
+                if filtered_words:
+                    random_caption = remove_filtered_words(random_caption, filtered_words)
+                    default_caption = remove_filtered_words(default_caption, filtered_words)
+                
+                # Combine captions
                 if default_caption:
                     final_caption = f"{random_caption}\n\n{default_caption}"
                 else:
                     final_caption = random_caption
                 
+                # Edit the message with new caption
                 await message.edit_caption(final_caption)
             
     except FloodWait as e:
