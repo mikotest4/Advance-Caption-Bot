@@ -77,37 +77,6 @@ async def restart_bot(b, m):
     await silicon.edit("**✅️ 𝙱𝙾𝚃 𝙸𝚂 𝚁𝙴𝚂𝚃𝙰𝚁𝚃𝙴𝙳. 𝙽𝙾𝚆 𝚈𝙾𝚄 𝙲𝙰𝙽 𝚄𝚂𝙴 𝙼𝙴**")
     os.execl(sys.executable, sys.executable, *sys.argv)
 
-# Original Caption Commands
-@Client.on_message(filters.command("set_cap") & filters.channel)
-async def setCap(bot, message):
-    if len(message.command) < 2:
-        return await message.reply(
-            "Usᴀɢᴇ: **/set_cap 𝑌𝑜𝑢𝑟 𝑐𝑎𝑝𝑡𝑖𝑜𝑛 𝑈𝑠𝑒 <code>{file_name}</code> 𝑇𝑜 𝑠ℎ𝑜𝑤 𝑦𝑜𝑢𝑟 𝐹𝑖𝑙𝑒 𝑁𝑎𝑚𝑒.\n\n𝑈𝑠𝑒<code>{file_size}</code> 𝑇𝑜 𝑠ℎ𝑜𝑤 𝑦𝑜𝑢𝑟 𝐹𝑖𝑙𝑒 𝑆𝑖𝑧𝑒/n/n✓ 𝑀𝑎𝑦 𝐵𝑒 𝑁𝑜𝑤 𝑌𝑜𝑢 𝑎𝑟𝑒 𝑐𝑙𝑒𝑎𝑟💫**"
-        )
-    chnl_id = message.chat.id
-    caption = (
-        message.text.split(" ", 1)[1] if len(message.text.split(" ", 1)) > 1 else None
-    )
-    chkData = await chnl_ids.find_one({"chnl_id": chnl_id})
-    if chkData:
-        await updateCap(chnl_id, caption)
-        return await message.reply(f"Your New Caption: {caption}")
-    else:
-        await addCap(chnl_id, caption)
-        return await message.reply(f"Yᴏᴜʀ Nᴇᴡ Cᴀᴘᴛɪᴏɴ Is: {caption}")
-
-@Client.on_message(filters.command("del_cap") & filters.channel)
-async def delCap(_, msg):
-    chnl_id = msg.chat.id
-    try:
-        await chnl_ids.delete_one({"chnl_id": chnl_id})
-        return await msg.reply("<b><i>✓ Sᴜᴄᴄᴇssғᴜʟʟʏ... Dᴇʟᴇᴛᴇᴅ Yᴏᴜʀ Cᴀᴘᴛɪᴏɴ Nᴏᴡ I ᴀᴍ Usɪɴɢ Mʏ Dᴇғᴀᴜʟᴛ Cᴀᴘᴛɪᴏɴ </i></b>")
-    except Exception as e:
-        e_val = await msg.reply(f"ERR I GOT: {e}")
-        await asyncio.sleep(5)
-        await e_val.delete()
-        return
-
 # Random Caption Commands - ONLY ADMIN CAN MANAGE
 @Client.on_message(filters.private & filters.user(ADMIN) & filters.command("add_caption"))
 async def add_caption_cmd(bot, message):
@@ -222,10 +191,9 @@ def get_file_info(media_obj):
     
     return file_info
 
-# Main Caption Processing - AUTOMATIC FOR ALL USERS
+# Main Caption Processing - RANDOM CAPTION ON TOP + ORIGINAL ON BOTTOM
 @Client.on_message(filters.channel | filters.group)
 async def reCap(bot, message):
-    chnl_id = message.chat.id
     default_caption = message.caption or ""
     
     # Check if message has any media
@@ -260,59 +228,19 @@ async def reCap(bot, message):
     # Process media if found
     if media_obj:
         try:
-            # Extract file information
-            file_info = get_file_info(media_obj)
-            file_name = file_info['name']
-            file_size = file_info['size']
-            
-            # Clean file name
-            if file_name != 'Unknown':
-                file_name = (
-                    re.sub(r"@\w+\s*", "", file_name)
-                    .replace("_", " ")
-                    .replace(".", " ")
-                )
-            
-            # Extract language and year
-            language = extract_language(default_caption + " " + file_name)
-            year = extract_year(default_caption + " " + file_name)
-            
-            # Get random caption from database - AUTOMATIC FOR ALL USERS
+            # Get random caption from database
             random_caption = await get_random_caption()
             
-            # Get channel specific caption or use default
-            cap_dets = await chnl_ids.find_one({"chnl_id": chnl_id})
-            
-            # Format file information
-            file_info_text = ""
-            if cap_dets:
-                cap = cap_dets["caption"]
-                file_info_text = cap.format(
-                    file_name=file_name,
-                    file_size=get_size(file_size),
-                    default_caption=default_caption,
-                    language=language,
-                    year=year or "",
-                    media_type=media_type
-                )
-            else:
-                file_info_text = DEF_CAP.format(
-                    file_name=file_name,
-                    file_size=get_size(file_size),
-                    default_caption=default_caption,
-                    language=language,
-                    year=year or "",
-                    media_type=media_type
-                )
-            
-            # Combine random caption with file info
+            # If random caption exists, combine it with original
             if random_caption:
-                final_caption = f"{random_caption}\n\n{file_info_text}"
-            else:
-                final_caption = file_info_text
-            
-            # Edit the message with new caption
-            await message.edit_caption(final_caption)
+                # Format: Random Caption + Original Caption
+                if default_caption:
+                    final_caption = f"{random_caption}\n\n{default_caption}"
+                else:
+                    final_caption = random_caption
+                
+                # Edit the message with new caption
+                await message.edit_caption(final_caption)
             
         except FloodWait as e:
             await asyncio.sleep(e.x)
