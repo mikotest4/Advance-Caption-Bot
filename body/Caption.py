@@ -108,8 +108,8 @@ async def delCap(_, msg):
         await e_val.delete()
         return
 
-# New Random Caption Commands
-@Client.on_message(filters.private & filters.user(ADMIN) & filters.command("add_caption"))
+# Random Caption Commands - NOW AVAILABLE FOR ALL USERS
+@Client.on_message(filters.command("add_caption"))
 async def add_caption_cmd(bot, message):
     if len(message.command) < 2:
         return await message.reply("**Usage:** `/add_caption Your Random Caption Text`")
@@ -119,7 +119,7 @@ async def add_caption_cmd(bot, message):
     total_caps = await total_random_captions()
     await message.reply(f"**✅ Caption Added Successfully!**\n\n**Caption:** {caption_text}\n**Total Captions:** {total_caps}")
 
-@Client.on_message(filters.private & filters.user(ADMIN) & filters.command("list_captions"))
+@Client.on_message(filters.command("list_captions"))
 async def list_captions_cmd(bot, message):
     loading = await message.reply("**Getting all captions...**")
     captions = await get_all_random_captions()
@@ -141,12 +141,12 @@ async def list_captions_cmd(bot, message):
     if caption_text:
         await loading.edit(caption_text)
 
-@Client.on_message(filters.private & filters.user(ADMIN) & filters.command("total_captions"))
+@Client.on_message(filters.command("total_captions"))
 async def total_captions_cmd(bot, message):
     total = await total_random_captions()
     await message.reply(f"**📊 Total Random Captions:** `{total}`")
 
-@Client.on_message(filters.private & filters.user(ADMIN) & filters.command("del_caption"))
+@Client.on_message(filters.command("del_caption"))
 async def del_caption_cmd(bot, message):
     if len(message.command) < 2:
         return await message.reply("**Usage:** `/del_caption caption_id`")
@@ -160,87 +160,150 @@ async def del_caption_cmd(bot, message):
     else:
         await message.reply("**❌ Failed to delete caption. Invalid ID or caption not found.**")
 
-@Client.on_message(filters.private & filters.user(ADMIN) & filters.command("clear_captions"))
+@Client.on_message(filters.user(ADMIN) & filters.command("clear_captions"))
 async def clear_captions_cmd(bot, message):
     await clear_all_random_captions()
     await message.reply("**✅ All random captions cleared successfully!**")
 
 # Helper Functions
-def extract_language(default_caption):
-    language_pattern = r'\b(Hindi|English|Tamil|Telugu|Malayalam|Kannada|Hin)\b'
-    languages = set(re.findall(language_pattern, default_caption, re.IGNORECASE))
+def extract_language(text):
+    if not text:
+        return "Hindi-English"
+    language_pattern = r'\b(Hindi|English|Tamil|Telugu|Malayalam|Kannada|Hin|Eng|Tam|Tel|Mal|Kan)\b'
+    languages = set(re.findall(language_pattern, text, re.IGNORECASE))
     if not languages:
         return "Hindi-English"
     return ", ".join(sorted(languages, key=str.lower))
 
-def extract_year(default_caption):
-    match = re.search(r'\b(19\d{2}|20\d{2})\b', default_caption)
+def extract_year(text):
+    if not text:
+        return None
+    match = re.search(r'\b(19\d{2}|20\d{2})\b', text)
     return match.group(1) if match else None
 
-# Main Caption Processing with Random Caption Feature
-@Client.on_message(filters.channel)
+def get_file_info(media_obj):
+    """Extract file information from media object"""
+    file_info = {
+        'name': 'Unknown',
+        'size': 0,
+        'type': 'Unknown'
+    }
+    
+    if hasattr(media_obj, 'file_name') and media_obj.file_name:
+        file_info['name'] = media_obj.file_name
+    elif hasattr(media_obj, 'file_unique_id'):
+        file_info['name'] = f"file_{media_obj.file_unique_id}"
+    
+    if hasattr(media_obj, 'file_size'):
+        file_info['size'] = media_obj.file_size
+    
+    return file_info
+
+# Main Caption Processing - NOW WORKS ON ALL MEDIA TYPES
+@Client.on_message(filters.channel | filters.group)
 async def reCap(bot, message):
     chnl_id = message.chat.id
-    default_caption = message.caption
+    default_caption = message.caption or ""
     
-    if message.media:
-        for file_type in ("video", "audio", "document", "voice"):
-            obj = getattr(message, file_type, None)
-            if obj and hasattr(obj, "file_name"):
-                file_name = obj.file_name
-                file_size = obj.file_size
-                language = extract_language(default_caption) if default_caption else "Hindi-English"
-                year = extract_year(default_caption) if default_caption else None
-                
+    # Check if message has any media
+    media_obj = None
+    media_type = "Unknown"
+    
+    if message.photo:
+        media_obj = message.photo
+        media_type = "Photo"
+    elif message.video:
+        media_obj = message.video
+        media_type = "Video"
+    elif message.audio:
+        media_obj = message.audio
+        media_type = "Audio"
+    elif message.document:
+        media_obj = message.document
+        media_type = "Document"
+    elif message.voice:
+        media_obj = message.voice
+        media_type = "Voice"
+    elif message.video_note:
+        media_obj = message.video_note
+        media_type = "Video Note"
+    elif message.animation:
+        media_obj = message.animation
+        media_type = "GIF"
+    elif message.sticker:
+        media_obj = message.sticker
+        media_type = "Sticker"
+    
+    # Process media if found
+    if media_obj:
+        try:
+            # Extract file information
+            file_info = get_file_info(media_obj)
+            file_name = file_info['name']
+            file_size = file_info['size']
+            
+            # Clean file name
+            if file_name != 'Unknown':
                 file_name = (
                     re.sub(r"@\w+\s*", "", file_name)
                     .replace("_", " ")
                     .replace(".", " ")
                 )
-                
-                # Get random caption
-                random_caption = await get_random_caption()
-                
-                # Get channel specific caption or use default
-                cap_dets = await chnl_ids.find_one({"chnl_id": chnl_id})
-                
-                try:
-                    # Format file information
-                    file_info = ""
-                    if cap_dets:
-                        cap = cap_dets["caption"]
-                        file_info = cap.format(
-                            file_name=file_name, 
-                            file_size=get_size(file_size), 
-                            default_caption=default_caption or "", 
-                            language=language, 
-                            year=year or ""
-                        )
-                    else:
-                        file_info = DEF_CAP.format(
-                            file_name=file_name, 
-                            file_size=get_size(file_size), 
-                            default_caption=default_caption or "", 
-                            language=language, 
-                            year=year or ""
-                        )
-                    
-                    # Combine random caption with file info
-                    if random_caption:
-                        final_caption = f"{random_caption}\n\n{file_info}"
-                    else:
-                        final_caption = file_info
-                    
-                    await message.edit(final_caption)
-                    
-                except FloodWait as e:
-                    await asyncio.sleep(e.x)
-                    continue
+            
+            # Extract language and year
+            language = extract_language(default_caption + " " + file_name)
+            year = extract_year(default_caption + " " + file_name)
+            
+            # Get random caption from database
+            random_caption = await get_random_caption()
+            
+            # Get channel specific caption or use default
+            cap_dets = await chnl_ids.find_one({"chnl_id": chnl_id})
+            
+            # Format file information
+            file_info_text = ""
+            if cap_dets:
+                cap = cap_dets["caption"]
+                file_info_text = cap.format(
+                    file_name=file_name,
+                    file_size=get_size(file_size),
+                    default_caption=default_caption,
+                    language=language,
+                    year=year or "",
+                    media_type=media_type
+                )
+            else:
+                file_info_text = DEF_CAP.format(
+                    file_name=file_name,
+                    file_size=get_size(file_size),
+                    default_caption=default_caption,
+                    language=language,
+                    year=year or "",
+                    media_type=media_type
+                )
+            
+            # Combine random caption with file info
+            if random_caption:
+                final_caption = f"{random_caption}\n\n{file_info_text}"
+            else:
+                final_caption = file_info_text
+            
+            # Edit the message with new caption
+            await message.edit_caption(final_caption)
+            
+        except FloodWait as e:
+            await asyncio.sleep(e.x)
+        except Exception as e:
+            print(f"Error processing media: {e}")
+    
     return
 
 # Size conversion function
 def get_size(size):
-    units = ["Bytes", "Kʙ", "Mʙ", "Gʙ", "Tʙ", "Pʙ", "Eʙ"]
+    if size == 0:
+        return "Unknown"
+    
+    units = ["Bytes", "KB", "MB", "GB", "TB", "PB", "EB"]
     size = float(size)
     i = 0
     while size >= 1024.0 and i < len(units) - 1:
