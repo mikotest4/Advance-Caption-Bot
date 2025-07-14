@@ -19,13 +19,8 @@ async def strtCap(bot, message):
         [
             [
                 InlineKeyboardButton("➕️ ᴀᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ ᴄʜᴀɴɴᴇʟ ➕️", url=f"https://t.me/CustomCaptionBot?startchannel=true")
-            ],[
-                InlineKeyboardButton("Hᴇʟᴘ", callback_data="help"),
-                InlineKeyboardButton("Aʙᴏᴜᴛ", callback_data="about")
-            ],[
-                InlineKeyboardButton("🌐 Uᴘᴅᴀᴛᴇ", url=f"https://t.me/Silicon_Bot_Update"),
-                InlineKeyboardButton("📜 Sᴜᴘᴘᴏʀᴛ", url=r"https://t.me/Silicon_Botz")
-        ]]
+            ]
+        ]
     )
     await message.reply_photo(
         photo=SILICON_PIC,
@@ -83,65 +78,6 @@ async def restart_bot(b, m):
     await asyncio.sleep(3)
     await silicon.edit("**✅️ 𝙱𝙾𝚃 𝙸𝚂 𝚁𝙴𝚂𝚃𝙰𝚁𝚃𝙴𝙳. 𝙽𝙾𝚆 𝚈𝙾𝚄 𝙲𝙰𝙽 𝚄𝚂𝙴 𝙼𝙴**")
     os.execl(sys.executable, sys.executable, *sys.argv)
-
-@Client.on_message(filters.command("bot_on"))
-async def bot_on_cmd(bot, message):
-    user_id = message.from_user.id
-    
-    # For channel/group messages, also set for the chat
-    if message.chat.type in ['channel', 'supergroup']:
-        chat_id = message.chat.id
-        await set_user_bot_status(chat_id, True)
-        await message.reply("**✅ Bot is now ON for this chat!**\n\nAutomatic caption feature is **ENABLED** for this chat. Bot will add random captions to media posts.")
-    else:
-        success = await set_user_bot_status(user_id, True)
-        if success:
-            await message.reply("**✅ Bot is now ON for you!**\n\nAutomatic caption feature is **ENABLED** for your account. Bot will add random captions to your media posts.")
-        else:
-            await message.reply("**❌ Failed to turn ON the bot for you. Please try again.**")
-
-@Client.on_message(filters.command("bot_off"))
-async def bot_off_cmd(bot, message):
-    user_id = message.from_user.id
-    
-    # For channel/group messages, also set for the chat
-    if message.chat.type in ['channel', 'supergroup']:
-        chat_id = message.chat.id
-        await set_user_bot_status(chat_id, False)
-        await message.reply("**🔴 Bot is now OFF for this chat!**\n\nAutomatic caption feature is **DISABLED** for this chat. Bot will not modify any captions.")
-    else:
-        success = await set_user_bot_status(user_id, False)
-        if success:
-            await message.reply("**🔴 Bot is now OFF for you!**\n\nAutomatic caption feature is **DISABLED** for your account. Bot will not modify your captions.")
-        else:
-            await message.reply("**❌ Failed to turn OFF the bot for you. Please try again.**")
-
-@Client.on_message(filters.command("bot_status"))
-async def bot_status_cmd(bot, message):
-    user_id = message.from_user.id
-    status = await get_user_bot_status(user_id)
-    
-    # Also check channel/group status
-    if message.chat.type in ['channel', 'supergroup']:
-        chat_status = await get_user_bot_status(message.chat.id)
-        total_caps = await total_random_captions()
-        
-        if status and chat_status:
-            status_text = f"**🟢 Bot Status: ON**\n\n✅ Both user and chat have bot **ENABLED**\n📊 Total Random Captions: `{total_caps}`"
-        elif status:
-            status_text = f"**🟡 Bot Status: PARTIAL**\n\n✅ User: **ENABLED**\n❌ Chat: **DISABLED**\n📊 Total Random Captions: `{total_caps}`"
-        elif chat_status:
-            status_text = f"**🟡 Bot Status: PARTIAL**\n\n❌ User: **DISABLED**\n✅ Chat: **ENABLED**\n📊 Total Random Captions: `{total_caps}`"
-        else:
-            status_text = f"**🔴 Bot Status: OFF**\n\n❌ Both user and chat have bot **DISABLED**\n📊 Total Random Captions: `{total_caps}`"
-    else:
-        total_caps = await total_random_captions()
-        if status:
-            status_text = f"**🟢 Your Bot Status: ON**\n\n✅ Automatic caption feature is **ENABLED**\n📊 Total Random Captions: `{total_caps}`"
-        else:
-            status_text = f"**🔴 Your Bot Status: OFF**\n\n❌ Automatic caption feature is **DISABLED**\n📊 Total Random Captions: `{total_caps}`"
-    
-    await message.reply(status_text)
 
 @Client.on_message(filters.private & filters.user(ADMIN) & filters.command("add_caption"))
 async def add_caption_cmd(bot, message):
@@ -220,101 +156,10 @@ async def preview_captions_cmd(bot, message):
     preview_text += f"**Total Captions Available:** `{len(captions)}`"
     await loading.edit(preview_text)
 
-@Client.on_message(filters.command("del"))
-async def del_words_cmd(bot, message):
-    user_id = message.from_user.id
-    
-    if len(message.command) < 2:
-        return await message.reply("**Usage:** `/del word1, word2, word3`\n\n**Example:** `/del alok, spam, delete`")
-    
-    words_text = message.text.split(" ", 1)[1]
-    words = [word.strip() for word in words_text.split(",")]
-    
-    words = [word for word in words if word]
-    
-    if not words:
-        return await message.reply("**❌ No valid words found!**\n\n**Usage:** `/del word1, word2, word3`")
-    
-    success = await add_user_filter(user_id, words)
-    
-    if success:
-        words_str = ", ".join(words)
-        await message.reply(f"**✅ Words added to filter successfully!**\n\n**Filtered Words:** {words_str}\n\n**Note:** These words will be removed from your captions automatically.")
-    else:
-        await message.reply("**❌ Failed to add words to filter. Please try again.**")
-
-@Client.on_message(filters.command("del_list"))
-async def del_list_cmd(bot, message):
-    user_id = message.from_user.id
-    filtered_words = await get_user_filters(user_id)
-    
-    if not filtered_words:
-        await message.reply("**📝 No filtered words found!**\n\nUse `/del word1, word2` to add words to filter.")
-    else:
-        words_str = ", ".join(filtered_words)
-        await message.reply(f"**📝 Your Filtered Words:**\n\n{words_str}\n\n**Note:** These words are automatically removed from your captions.")
-
-@Client.on_message(filters.command("del_clear"))
-async def del_clear_cmd(bot, message):
-    user_id = message.from_user.id
-    success = await clear_user_filters(user_id)
-    
-    if success:
-        await message.reply("**✅ All filtered words cleared successfully!**\n\nNo words will be removed from your captions now.")
-    else:
-        await message.reply("**❌ Failed to clear filtered words. Please try again.**")
-
 @Client.on_message(filters.channel | filters.group)
 async def reCap(bot, message):
     try:
-        user_id = None
-        chat_id = message.chat.id
-        
-        # Get user ID from different sources
-        if message.from_user:
-            user_id = message.from_user.id
-        elif message.sender_chat:
-            user_id = message.sender_chat.id
-        
-        # Check bot status for BOTH user and chat
-        bot_enabled = False
-        
-        if user_id:
-            try:
-                user_bot_status = await get_user_bot_status(user_id)
-                chat_bot_status = await get_user_bot_status(chat_id)
-                
-                # Bot should work only if BOTH user and chat have it enabled
-                # OR if it's a channel post (sender_chat), only check chat status
-                if message.sender_chat:
-                    bot_enabled = chat_bot_status
-                else:
-                    bot_enabled = user_bot_status and chat_bot_status
-                
-            except Exception as e:
-                bot_enabled = True  # Default to enabled if error checking
-        else:
-            # If no user info, check only chat status
-            try:
-                bot_enabled = await get_user_bot_status(chat_id)
-            except Exception as e:
-                bot_enabled = True
-        
-        # If bot is disabled, don't process anything
-        if not bot_enabled:
-            return
-        
         default_caption = message.caption or ""
-        
-        # Get user's filtered words (use chat_id if no user_id)
-        filtered_words = []
-        filter_user_id = user_id if user_id else chat_id
-        
-        if filter_user_id:
-            try:
-                filtered_words = await get_user_filters(filter_user_id)
-            except Exception as e:
-                pass
         
         # Check if message has media
         media_found = False
@@ -341,11 +186,6 @@ async def reCap(bot, message):
             random_caption = await get_random_caption()
             
             if random_caption:
-                # Apply word filters to BOTH random caption and original caption
-                if filtered_words:
-                    random_caption = remove_filtered_words(random_caption, filtered_words)
-                    default_caption = remove_filtered_words(default_caption, filtered_words)
-                
                 # Combine captions
                 if default_caption:
                     final_caption = f"{random_caption}\n\n{default_caption}"
@@ -359,49 +199,3 @@ async def reCap(bot, message):
         await asyncio.sleep(e.x)
     except Exception as e:
         pass
-
-@Client.on_callback_query(filters.regex(r'^start'))
-async def start(bot, query):
-    await query.message.edit_text(
-        text=script.START_TXT.format(query.from_user.mention),
-        reply_markup=InlineKeyboardMarkup(
-            [[
-                InlineKeyboardButton("➕️ ᴀᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ ᴄʜᴀɴɴᴇʟ ➕️", url=f"http://t.me/CustomCaptionBot?startchannel=true")
-            ],[
-                InlineKeyboardButton("Hᴇʟᴘ", callback_data="help"),
-                InlineKeyboardButton("Aʙᴏᴜᴛ", callback_data="about")
-            ],[
-                InlineKeyboardButton("🌐 Uᴘᴅᴀᴛᴇ", url=f"https://t.me/Silicon_Bot_Update"),
-                InlineKeyboardButton("📜 Sᴜᴘᴘᴏʀᴛ", url=r"https://t.me/Silicon_Botz")
-            ]]
-        ),
-        disable_web_page_preview=True
-    )
-
-@Client.on_callback_query(filters.regex(r'^help'))
-async def help(bot, query):
-    await query.message.edit_text(
-        text=script.HELP_TXT,
-        reply_markup=InlineKeyboardMarkup(
-            [[
-                InlineKeyboardButton('About', callback_data='about')
-            ],[
-                InlineKeyboardButton('↩ ʙᴀᴄᴋ', callback_data='start')
-            ]]
-        ),
-        disable_web_page_preview=True
-    )
-
-@Client.on_callback_query(filters.regex(r'^about'))
-async def about(bot, query):
-    await query.message.edit_text(
-        text=script.ABOUT_TXT,
-        reply_markup=InlineKeyboardMarkup(
-            [[
-                InlineKeyboardButton('Help', callback_data='help')
-            ],[
-                InlineKeyboardButton('↩ ʙᴀᴄᴋ', callback_data='start')
-            ]]
-        ),
-        disable_web_page_preview=True
-    )
