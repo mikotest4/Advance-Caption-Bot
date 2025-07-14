@@ -1,4 +1,4 @@
-from pyrogram import Client, filters
+from pyrogram import *
 from info import *
 import asyncio
 from Script import script
@@ -8,7 +8,7 @@ import sys
 import time
 import os
 from pyrogram.errors import FloodWait
-from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from pyrogram.types import *
 from pyrogram import errors
 
 @Client.on_message(filters.command("start") & filters.private)
@@ -18,30 +18,29 @@ async def strtCap(bot, message):
     keyboard = InlineKeyboardMarkup(
         [
             [
-                InlineKeyboardButton("ʏ", url="https://t.me/Yae_X_Miko"),
-                InlineKeyboardButton("ᴀ", url="https://t.me/Yae_X_Miko"),
-                InlineKeyboardButton("ᴇ", url="https://t.me/Yae_X_Miko"),
-                InlineKeyboardButton("ᴍ", url="https://t.me/Yae_X_Miko"),
-                InlineKeyboardButton("ɪ", url="https://t.me/Yae_X_Miko"),
-                InlineKeyboardButton("ᴋ", url="https://t.me/Yae_X_Miko"),
-                InlineKeyboardButton("ᴏ", url="https://t.me/Yae_X_Miko")
+                InlineKeyboardButton("Y", url="https://t.me/Yae_X_Miko"),
+                InlineKeyboardButton("A", url="https://t.me/Yae_X_Miko"),
+                InlineKeyboardButton("E", url="https://t.me/Yae_X_Miko"),
+                InlineKeyboardButton("M", url="https://t.me/Yae_X_Miko"),
+                InlineKeyboardButton("I", url="https://t.me/Yae_X_Miko"),
+                InlineKeyboardButton("K", url="https://t.me/Yae_X_Miko"),
+                InlineKeyboardButton("O", url="https://t.me/Yae_X_Miko")
             ],
             [
-                InlineKeyboardButton("ᴍᴀᴋᴇ ᴍᴇ ʏᴏᴜʀ", url="https://t.me/Testmikosbot?startchannel=true"),
-                InlineKeyboardButton("ᴍʏ ᴍᴀsᴛᴇʀ", url="https://t.me/Yae_X_Miko")
+                InlineKeyboardButton("🔥 MAKE ME YOURS 🔥", url=f"https://t.me/CustomCaptionBot?startchannel=true"),
+                InlineKeyboardButton("🎭 MY MASTER 🎭", url=f"https://t.me/Silicon_Bot_Update")
             ]
         ]
     )
-    caption = f"""<b>🎊 ʙᴏᴛ ᴡᴇʟᴄᴏᴍᴇs ʏᴏᴜ 🎊
-
-ʜᴇʟʟᴏ {message.from_user.mention}! ʀᴇᴀᴅʏ ᴛᴏ ᴇᴅɪᴛ ᴄᴀᴘᴛɪᴏɴ? 😉
-
-ᴊᴜsᴛ ᴀᴅᴅ ᴍᴇ ɪɴ ʏᴏᴜʀ ᴄʜᴀɴɴᴇʟ ᴀs ᴀᴅᴍɪɴ, ᴀɴᴅ ᴛʜɪs ʙᴏᴛ ᴡɪʟʟ ᴀᴜᴛᴏᴍᴀᴛɪᴄᴀʟʟʏ ᴛᴜʀɴ ʏᴏᴜʀ ᴄᴀᴘᴛɪᴏɴs ɪɴᴛᴏ ʙᴇᴛᴛᴇʀ ᴏɴᴇs ⚡️
-
-ᴛʜɪs ʙᴏᴛ ɪs ᴄʀᴇᴀᴛᴇᴅ ʙʏ ᴍʏ ᴍᴀsᴛᴇʀ – sᴀʏ ᴛʜᴀɴᴋs ᴛᴏ ʜɪᴍ 🙏</b>"""
     await message.reply_photo(
-        photo=START_PIC,
-        caption=caption,
+        photo=SILICON_PIC,
+        caption=f"""<b>🎊 Welcome to the Caption Bot 🎊
+
+This bot edits captions in your Telegram channels automatically 😉
+
+Add me to your channel as admin and start posting ⚡️
+
+Hey {message.from_user.mention}! Ready to make your captions awesome? 🚀</b>""",
         reply_markup=keyboard
     )
 
@@ -94,6 +93,7 @@ async def restart_bot(b, m):
 async def add_caption_cmd(bot, message):
     if len(message.command) < 2:
         return await message.reply("**Usage:** `/add_caption Your Random Caption Text`")
+    
     caption_text = message.text.split(" ", 1)[1]
     await add_random_caption(caption_text)
     total_caps = await total_random_captions()
@@ -103,17 +103,21 @@ async def add_caption_cmd(bot, message):
 async def list_captions_cmd(bot, message):
     loading = await message.reply("**Getting all captions...**")
     captions = await get_all_random_captions()
+    
     if not captions:
         return await loading.edit("**No random captions found!**")
+    
     caption_text = "**📝 All Random Captions:**\n\n"
     for i, caption in enumerate(captions, 1):
         caption_id = str(caption['_id'])
         caption_content = caption['caption'][:50] + "..." if len(caption['caption']) > 50 else caption['caption']
         caption_text += f"**{i}.** `{caption_id}`\n{caption_content}\n\n"
+        
         if len(caption_text) > 3500:
             await loading.edit(caption_text)
             caption_text = ""
             loading = await message.reply("**More captions...**")
+    
     if caption_text:
         await loading.edit(caption_text)
 
@@ -126,8 +130,10 @@ async def admin_total_captions_cmd(bot, message):
 async def del_caption_cmd(bot, message):
     if len(message.command) < 2:
         return await message.reply("**Usage:** `/del_caption caption_id`")
+    
     caption_id = message.command[1]
     success = await delete_random_caption(caption_id)
+    
     if success:
         total = await total_random_captions()
         await message.reply(f"**✅ Caption Deleted Successfully!**\n**Remaining Captions:** {total}")
@@ -148,20 +154,31 @@ async def public_total_captions(bot, message):
 async def preview_captions_cmd(bot, message):
     loading = await message.reply("**Getting caption preview...**")
     captions = await get_all_random_captions()
+    
     if not captions:
         return await loading.edit("**No random captions available!**")
+    
     preview_text = "**📝 Random Captions Preview (First 10):**\n\n"
     for i, caption in enumerate(captions[:10], 1):
         caption_content = caption['caption'][:60] + "..." if len(caption['caption']) > 60 else caption['caption']
         preview_text += f"**{i}.** {caption_content}\n\n"
+    
     preview_text += f"**Total Captions Available:** `{len(captions)}`"
     await loading.edit(preview_text)
 
 @Client.on_message(filters.channel | filters.group)
 async def reCap(bot, message):
     try:
+        # Skip if message is older than 5 minutes to avoid editing old messages
+        import time
+        if message.date and (time.time() - message.date.timestamp()) > 300:
+            return
+            
         default_caption = message.caption or ""
+        
+        # Check if message has media
         media_found = False
+        
         if message.photo:
             media_found = True
         elif message.video:
@@ -178,17 +195,37 @@ async def reCap(bot, message):
             media_found = True
         elif message.sticker:
             media_found = True
+        
         if media_found:
+            # Get random caption from database
             random_caption = await get_random_caption()
+            
             if random_caption:
+                # Make random caption bold
                 bold_random_caption = f"<b>{random_caption}</b>"
+                
+                # Combine captions
                 if default_caption:
+                    # Make original caption bold too
                     bold_default_caption = f"<b>{default_caption}</b>"
                     final_caption = f"{bold_random_caption}\n\n{bold_default_caption}"
                 else:
                     final_caption = bold_random_caption
-                await message.edit_caption(final_caption)
+                
+                # Try to edit the message with new bold caption
+                try:
+                    await message.edit_caption(final_caption)
+                except Exception as edit_error:
+                    # If editing fails, try to add caption by replying
+                    print(f"Edit failed: {edit_error}")
+                    try:
+                        await message.reply(final_caption)
+                    except Exception as reply_error:
+                        print(f"Reply failed: {reply_error}")
+                        pass
+            
     except FloodWait as e:
         await asyncio.sleep(e.x)
     except Exception as e:
+        print(f"Error in reCap: {e}")
         pass
