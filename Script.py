@@ -17,34 +17,44 @@ class script(object):
 • Tʜᴇsᴇ ᴄᴏᴍᴍᴀɴᴅ ᴏɴʟʏ ᴡᴏʀᴋ ɪɴ ᴄʜᴀɴɴᴇʟ.
 • Kᴇᴇᴘ ғɪʟᴇ ᴡɪᴛʜᴏᴜᴛ ғᴏʀᴡᴀʀᴅ ᴛᴀɢ.
 
+<b>📋 Cʜᴀɴɴᴇʟ Cᴏᴍᴍᴀɴᴅs:</b>
 •> /set_cap - Sᴇᴛ Nᴇᴡ Cᴀᴘᴛɪᴏɴ Iɴ ʏᴏᴜʀ Cʜᴀɴɴᴇʟ
 •> /del_cap - Dᴇʟᴇᴛᴇ Yᴏᴜʀ Cᴀᴘᴛɪᴏɴ
 
-𝑭𝒐𝒓𝒎𝒂𝒕
+<b>🎯 Rᴀɴᴅᴏᴍ Cᴀᴘᴛɪᴏɴ Cᴏᴍᴍᴀɴᴅs (Aɴʏ Usᴇʀ):</b>
+•> /add_caption <caption> - Aᴅᴅ ɴᴇᴡ ʀᴀɴᴅᴏᴍ ᴄᴀᴘᴛɪᴏɴ
+•> /list_captions - Lɪsᴛ ᴀʟʟ ʀᴀɴᴅᴏᴍ ᴄᴀᴘᴛɪᴏɴs
+•> /total_captions - Tᴏᴛᴀʟ ʀᴀɴᴅᴏᴍ ᴄᴀᴘᴛɪᴏɴs ᴄᴏᴜɴᴛ
+•> /del_caption <caption_id> - Dᴇʟᴇᴛᴇ ʀᴀɴᴅᴏᴍ ᴄᴀᴘᴛɪᴏɴ
 
+<b>📱 Sᴜᴘᴘᴏʀᴛᴇᴅ Mᴇᴅɪᴀ:</b>
+✅ Photos
+✅ Videos  
+✅ Audio Files
+✅ Documents
+✅ Voice Messages
+✅ Video Notes
+✅ GIFs/Animations
+✅ Stickers
+
+𝑭𝒐𝒓𝒎𝒂𝒕 𝑽𝒂𝒓𝒊𝒂𝒃𝒍𝒆𝒔:
 `{file_name}` = Oʀɪɢɪɴᴀʟ Fɪʟᴇ Nᴀᴍᴇ
 `{file_size}` = Oʀɪɢɪɴᴀʟ Fɪʟᴇ Sɪᴢᴇ 
 `{language}` = Lᴀɴɢᴜᴀɢᴇ Oғ Fɪʟᴇ Nᴀᴍᴇ
 `{year}` = Yᴇᴀʀ Oғ Fɪʟᴇ
-`{default_caption}` = Rᴇᴀʟ Cᴀᴘᴛɪᴏɴ Oғ Fɪʟᴇ.
+`{media_type}` = Tʏᴘᴇ ᴏғ Mᴇᴅɪᴀ
+`{default_caption}` = Rᴇᴀʟ Cᴀᴘᴛɪᴏɴ Oғ Fɪʟᴇ
 
 Eg:- `/set_cap
 {file_name}
 
 ⚙️ Size » {file_size}
+📁 Type » {media_type}
 
 ╔═════ ᴊᴏɪɴ ᴡɪᴛʜ ᴜs ════╗
 💥 𝙅𝙊𝙄𝙉 :- ᴄʜᴀɴɴᴇʟ ʟɪɴᴋ 
 💥 𝙅𝙊𝙄𝙉 :- ᴄʜᴀɴɴᴇʟ ʟɪɴᴋ
 ╚═════ ᴊᴏɪɴ ᴡɪᴛʜ ᴜs ════╝`
-
-<b>🎯 Aᴅᴍɪɴ Cᴏᴍᴍᴀɴᴅs (Rᴀɴᴅᴏᴍ Cᴀᴘᴛɪᴏɴs):</b>
-
-•> /add_caption <caption> - Aᴅᴅ ɴᴇᴡ ʀᴀɴᴅᴏᴍ ᴄᴀᴘᴛɪᴏɴ
-•> /list_captions - Lɪsᴛ ᴀʟʟ ʀᴀɴᴅᴏᴍ ᴄᴀᴘᴛɪᴏɴs
-•> /total_captions - Tᴏᴛᴀʟ ʀᴀɴᴅᴏᴍ ᴄᴀᴘᴛɪᴏɴs ᴄᴏᴜɴᴛ
-•> /del_caption <caption_id> - Dᴇʟᴇᴛᴇ ʀᴀɴᴅᴏᴍ ᴄᴀᴘᴛɪᴏɴ
-•> /clear_captions - Cʟᴇᴀʀ ᴀʟʟ ʀᴀɴᴅᴏᴍ ᴄᴀᴘᴛɪᴏɴs
 """
 
     ABOUT_TXT = """<b>╔════❰ ᴀᴜᴛᴏ ᴄᴀᴘᴛɪᴏɴ ʙᴏᴛ ❱═❍⊱❁
@@ -55,11 +65,13 @@ Eg:- `/set_cap
 ║┣⪼📡Hᴏsᴛᴇᴅ ᴏɴ : ʜᴇʀᴏᴋᴜ 
 ║┣⪼🗣️Lᴀɴɢᴜᴀɢᴇ : Pʏᴛʜᴏɴ3
 ║┣⪼📚Lɪʙʀᴀʀʏ : Pʏʀᴏɢʀᴀᴍ 2.11.6
-║┣⪼🗒️Vᴇʀsɪᴏɴ : 3.0.0 [ᴡɪᴛʜ ʀᴀɴᴅᴏᴍ ᴄᴀᴘᴛɪᴏɴs]
+║┣⪼🗒️Vᴇʀsɪᴏɴ : 3.1.0 [ᴀʟʟ ᴍᴇᴅɪᴀ sᴜᴘᴘᴏʀᴛ]
 ║╰━━━━━━━━━━━━━━━➣
 ╚══════════════════❍⊱❁
 
 🎯 <b>Nᴇᴡ Fᴇᴀᴛᴜʀᴇs:</b>
 • Rᴀɴᴅᴏᴍ ᴄᴀᴘᴛɪᴏɴ sᴇʟᴇᴄᴛɪᴏɴ
+• Aʟʟ ᴍᴇᴅɪᴀ ᴛʏᴘᴇs sᴜᴘᴘᴏʀᴛ
+• Aɴʏ ᴜsᴇʀ ᴄᴀɴ ᴀᴅᴅ ᴄᴀᴘᴛɪᴏɴs
 • 100+ ᴄᴜsᴛᴏᴍ ᴄᴀᴘᴛɪᴏɴs sᴜᴘᴘᴏʀᴛ
-• Aᴅᴍɪɴ ᴄᴀᴘᴛɪᴏɴ ᴍᴀɴᴀɢᴇᴍᴇɴᴛ</b>"""
+• Gʀᴏᴜᴘ ᴀɴᴅ ᴄʜᴀɴɴᴇʟ sᴜᴘᴘᴏʀᴛ</b>"""
