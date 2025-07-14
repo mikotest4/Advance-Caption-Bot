@@ -1,12 +1,13 @@
 import motor.motor_asyncio
 from info import *
 import random
+from datetime import datetime
 
 client = motor.motor_asyncio.AsyncIOMotorClient(MONGO_DB)
 db = client.captions_with_chnl
 users = db.users
 random_captions = db.random_captions
-bot_settings = db.bot_settings
+user_settings = db.user_settings  # New collection for per-user settings
 
 # User Functions
 async def insert(user_id):
@@ -27,35 +28,55 @@ async def getid():
 async def delete(id):
     await users.delete_one(id)
 
-# Bot Settings Functions
-async def get_bot_status():
-    """Get current bot status (ON/OFF)"""
+# User-Specific Bot Settings Functions
+async def get_user_bot_status(user_id):
+    """Get bot status for specific user"""
     try:
-        status = await bot_settings.find_one({"_id": "bot_status"})
-        if status:
-            return status.get("enabled", True)  # Default is True (ON)
+        user_setting = await user_settings.find_one({"_id": user_id})
+        if user_setting:
+            return user_setting.get("bot_enabled", True)  # Default is True (ON)
         else:
-            # Create default setting
-            await bot_settings.insert_one({"_id": "bot_status", "enabled": True})
+            # Create default setting for new user
+            await user_settings.insert_one({
+                "_id": user_id, 
+                "bot_enabled": True,
+                "created_at": datetime.now()
+            })
             return True
     except Exception as e:
-        print(f"Error getting bot status: {e}")
+        print(f"Error getting user bot status: {e}")
         return True
 
-async def set_bot_status(enabled):
-    """Set bot status (ON/OFF)"""
+async def set_user_bot_status(user_id, enabled):
+    """Set bot status for specific user"""
     try:
-        await bot_settings.update_one(
-            {"_id": "bot_status"},
-            {"$set": {"enabled": enabled}},
+        await user_settings.update_one(
+            {"_id": user_id},
+            {"$set": {
+                "bot_enabled": enabled,
+                "updated_at": datetime.now()
+            }},
             upsert=True
         )
         return True
     except Exception as e:
-        print(f"Error setting bot status: {e}")
+        print(f"Error setting user bot status: {e}")
         return False
 
-# Random Caption Functions
+async def get_default_bot_status():
+    """Get default bot status for new users"""
+    return True  # Default is always ON for new users
+
+# Old global functions kept for backward compatibility (if needed)
+async def get_bot_status():
+    """Get global bot status (deprecated - use get_user_bot_status instead)"""
+    return True  # Always return True since we're using per-user settings now
+
+async def set_bot_status(enabled):
+    """Set global bot status (deprecated - use set_user_bot_status instead)"""
+    return True  # Always return True since we're using per-user settings now
+
+# Random Caption Functions (unchanged)
 async def add_random_caption(caption_text):
     """Add a new random caption to database"""
     caption_data = {"caption": caption_text}
@@ -107,3 +128,21 @@ async def total_random_captions():
 async def clear_all_random_captions():
     """Clear all random captions"""
     await random_captions.delete_many({})
+
+# Additional helper functions for user settings
+async def get_all_user_settings():
+    """Get all user settings for admin purposes"""
+    settings = []
+    async for setting in user_settings.find({}):
+        settings.append(setting)
+    return settings
+
+async def total_enabled_users():
+    """Get count of users who have bot enabled"""
+    count = await user_settings.count_documents({"bot_enabled": True})
+    return count
+
+async def total_disabled_users():
+    """Get count of users who have bot disabled"""
+    count = await user_settings.count_documents({"bot_enabled": False})
+    return count
