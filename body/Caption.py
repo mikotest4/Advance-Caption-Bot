@@ -92,12 +92,13 @@ async def bot_on_cmd(bot, message):
     if message.chat.type in ['channel', 'supergroup']:
         chat_id = message.chat.id
         await set_user_bot_status(chat_id, True)
-    
-    success = await set_user_bot_status(user_id, True)
-    if success:
-        await message.reply("**✅ Bot is now ON for you!**\n\nAutomatic caption feature is **ENABLED** for your account. Bot will add random captions to your media posts.")
+        await message.reply("**✅ Bot is now ON for this chat!**\n\nAutomatic caption feature is **ENABLED** for this chat. Bot will add random captions to media posts.")
     else:
-        await message.reply("**❌ Failed to turn ON the bot for you. Please try again.**")
+        success = await set_user_bot_status(user_id, True)
+        if success:
+            await message.reply("**✅ Bot is now ON for you!**\n\nAutomatic caption feature is **ENABLED** for your account. Bot will add random captions to your media posts.")
+        else:
+            await message.reply("**❌ Failed to turn ON the bot for you. Please try again.**")
 
 @Client.on_message(filters.command("bot_off"))
 async def bot_off_cmd(bot, message):
@@ -107,12 +108,13 @@ async def bot_off_cmd(bot, message):
     if message.chat.type in ['channel', 'supergroup']:
         chat_id = message.chat.id
         await set_user_bot_status(chat_id, False)
-    
-    success = await set_user_bot_status(user_id, False)
-    if success:
-        await message.reply("**🔴 Bot is now OFF for you!**\n\nAutomatic caption feature is **DISABLED** for your account. Bot will not modify your captions.")
+        await message.reply("**🔴 Bot is now OFF for this chat!**\n\nAutomatic caption feature is **DISABLED** for this chat. Bot will not modify any captions.")
     else:
-        await message.reply("**❌ Failed to turn OFF the bot for you. Please try again.**")
+        success = await set_user_bot_status(user_id, False)
+        if success:
+            await message.reply("**🔴 Bot is now OFF for you!**\n\nAutomatic caption feature is **DISABLED** for your account. Bot will not modify your captions.")
+        else:
+            await message.reply("**❌ Failed to turn OFF the bot for you. Please try again.**")
 
 @Client.on_message(filters.command("bot_status"))
 async def bot_status_cmd(bot, message):
@@ -266,29 +268,51 @@ async def del_clear_cmd(bot, message):
 async def reCap(bot, message):
     try:
         user_id = None
+        chat_id = message.chat.id
+        
+        # Get user ID from different sources
         if message.from_user:
             user_id = message.from_user.id
         elif message.sender_chat:
             user_id = message.sender_chat.id
-        else:
-            user_id = message.chat.id
         
-        # Check if bot is enabled for this user/channel
+        # Check bot status for BOTH user and chat
+        bot_enabled = False
+        
         if user_id:
             try:
-                user_bot_enabled = await get_user_bot_status(user_id)
-                if not user_bot_enabled:
-                    return  # Bot is OFF for this user, don't process
+                user_bot_status = await get_user_bot_status(user_id)
+                chat_bot_status = await get_user_bot_status(chat_id)
+                
+                # Bot should work only if BOTH user and chat have it enabled
+                # OR if it's a channel post (sender_chat), only check chat status
+                if message.sender_chat:
+                    bot_enabled = chat_bot_status
+                else:
+                    bot_enabled = user_bot_status and chat_bot_status
+                
             except Exception as e:
-                pass
+                bot_enabled = True  # Default to enabled if error checking
+        else:
+            # If no user info, check only chat status
+            try:
+                bot_enabled = await get_user_bot_status(chat_id)
+            except Exception as e:
+                bot_enabled = True
+        
+        # If bot is disabled, don't process anything
+        if not bot_enabled:
+            return
         
         default_caption = message.caption or ""
         
-        # Get user's filtered words
+        # Get user's filtered words (use chat_id if no user_id)
         filtered_words = []
-        if user_id:
+        filter_user_id = user_id if user_id else chat_id
+        
+        if filter_user_id:
             try:
-                filtered_words = await get_user_filters(user_id)
+                filtered_words = await get_user_filters(filter_user_id)
             except Exception as e:
                 pass
         
