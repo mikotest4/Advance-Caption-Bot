@@ -108,8 +108,8 @@ async def delCap(_, msg):
         await e_val.delete()
         return
 
-# Random Caption Commands - NOW AVAILABLE FOR ALL USERS
-@Client.on_message(filters.command("add_caption"))
+# Random Caption Commands - ONLY ADMIN CAN MANAGE
+@Client.on_message(filters.private & filters.user(ADMIN) & filters.command("add_caption"))
 async def add_caption_cmd(bot, message):
     if len(message.command) < 2:
         return await message.reply("**Usage:** `/add_caption Your Random Caption Text`")
@@ -119,7 +119,7 @@ async def add_caption_cmd(bot, message):
     total_caps = await total_random_captions()
     await message.reply(f"**✅ Caption Added Successfully!**\n\n**Caption:** {caption_text}\n**Total Captions:** {total_caps}")
 
-@Client.on_message(filters.command("list_captions"))
+@Client.on_message(filters.private & filters.user(ADMIN) & filters.command("list_captions"))
 async def list_captions_cmd(bot, message):
     loading = await message.reply("**Getting all captions...**")
     captions = await get_all_random_captions()
@@ -141,12 +141,12 @@ async def list_captions_cmd(bot, message):
     if caption_text:
         await loading.edit(caption_text)
 
-@Client.on_message(filters.command("total_captions"))
+@Client.on_message(filters.private & filters.user(ADMIN) & filters.command("total_captions"))
 async def total_captions_cmd(bot, message):
     total = await total_random_captions()
     await message.reply(f"**📊 Total Random Captions:** `{total}`")
 
-@Client.on_message(filters.command("del_caption"))
+@Client.on_message(filters.private & filters.user(ADMIN) & filters.command("del_caption"))
 async def del_caption_cmd(bot, message):
     if len(message.command) < 2:
         return await message.reply("**Usage:** `/del_caption caption_id`")
@@ -160,10 +160,33 @@ async def del_caption_cmd(bot, message):
     else:
         await message.reply("**❌ Failed to delete caption. Invalid ID or caption not found.**")
 
-@Client.on_message(filters.user(ADMIN) & filters.command("clear_captions"))
+@Client.on_message(filters.private & filters.user(ADMIN) & filters.command("clear_captions"))
 async def clear_captions_cmd(bot, message):
     await clear_all_random_captions()
     await message.reply("**✅ All random captions cleared successfully!**")
+
+# Public Commands - ANY USER CAN USE
+@Client.on_message(filters.command("total_captions"))
+async def public_total_captions(bot, message):
+    total = await total_random_captions()
+    await message.reply(f"**📊 Total Available Random Captions:** `{total}`")
+
+@Client.on_message(filters.command("preview_captions"))
+async def preview_captions_cmd(bot, message):
+    loading = await message.reply("**Getting caption preview...**")
+    captions = await get_all_random_captions()
+    
+    if not captions:
+        return await loading.edit("**No random captions available!**")
+    
+    # Show only first 10 captions as preview
+    preview_text = "**📝 Random Captions Preview (First 10):**\n\n"
+    for i, caption in enumerate(captions[:10], 1):
+        caption_content = caption['caption'][:60] + "..." if len(caption['caption']) > 60 else caption['caption']
+        preview_text += f"**{i}.** {caption_content}\n\n"
+    
+    preview_text += f"**Total Captions Available:** `{len(captions)}`"
+    await loading.edit(preview_text)
 
 # Helper Functions
 def extract_language(text):
@@ -199,7 +222,7 @@ def get_file_info(media_obj):
     
     return file_info
 
-# Main Caption Processing - NOW WORKS ON ALL MEDIA TYPES
+# Main Caption Processing - AUTOMATIC FOR ALL USERS
 @Client.on_message(filters.channel | filters.group)
 async def reCap(bot, message):
     chnl_id = message.chat.id
@@ -254,7 +277,7 @@ async def reCap(bot, message):
             language = extract_language(default_caption + " " + file_name)
             year = extract_year(default_caption + " " + file_name)
             
-            # Get random caption from database
+            # Get random caption from database - AUTOMATIC FOR ALL USERS
             random_caption = await get_random_caption()
             
             # Get channel specific caption or use default
