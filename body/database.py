@@ -4,18 +4,10 @@ import random
 
 client = motor.motor_asyncio.AsyncIOMotorClient(MONGO_DB)
 db = client.captions_with_chnl
-chnl_ids = db.chnl_ids
 users = db.users
 random_captions = db.random_captions
 
-# Original Functions
-async def addCap(chnl_id, caption):
-    dets = {"chnl_id": chnl_id, "caption": caption}
-    await chnl_ids.insert_one(dets)
-
-async def updateCap(chnl_id, caption):
-    await chnl_ids.update_one({"chnl_id": chnl_id}, {"$set": {"caption": caption}})
-
+# User Functions
 async def insert(user_id):
     user_det = {"_id": user_id}
     try:
@@ -34,7 +26,7 @@ async def getid():
 async def delete(id):
     await users.delete_one(id)
 
-# New Random Caption Functions
+# Random Caption Functions
 async def add_random_caption(caption_text):
     """Add a new random caption to database"""
     caption_data = {"caption": caption_text}
