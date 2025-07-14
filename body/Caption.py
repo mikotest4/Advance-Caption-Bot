@@ -36,7 +36,9 @@ async def strtCap(bot, message):
 async def all_db_users_here(client,message):
     silicon = await message.reply_text("Please Wait....")
     silicon_botz = await total_user()
-    await silicon.edit(f"Tᴏᴛᴀʟ Usᴇʀ :- `{silicon_botz}`")
+    enabled_users = await total_enabled_users()
+    disabled_users = await total_disabled_users()
+    await silicon.edit(f"**📊 User Statistics:**\n\n• Total Users: `{silicon_botz}`\n• Bot Enabled: `{enabled_users}`\n• Bot Disabled: `{disabled_users}`")
 
 @Client.on_message(filters.private & filters.user(ADMIN) & filters.command(["broadcast"]))
 async def broadcast(bot, message):
@@ -77,32 +79,35 @@ async def restart_bot(b, m):
     await silicon.edit("**✅️ 𝙱𝙾𝚃 𝙸𝚂 𝚁𝙴𝚂𝚃𝙰𝚁𝚃𝙴𝙳. 𝙽𝙾𝚆 𝚈𝙾𝚄 𝙲𝙰𝙽 𝚄𝚂𝙴 𝙼𝙴**")
     os.execl(sys.executable, sys.executable, *sys.argv)
 
-# Bot ON/OFF Commands - ANYONE CAN USE
+# Per-User Bot ON/OFF Commands - ANYONE CAN USE FOR THEMSELVES
 @Client.on_message(filters.command("bot_on"))
 async def bot_on_cmd(bot, message):
-    success = await set_bot_status(True)
+    user_id = message.from_user.id
+    success = await set_user_bot_status(user_id, True)
     if success:
-        await message.reply("**✅ Bot is now ON!**\n\nAutomatic caption feature is **ENABLED**. Bot will add random captions to all media posts.")
+        await message.reply("**✅ Bot is now ON for you!**\n\nAutomatic caption feature is **ENABLED** for your account. Bot will add random captions to your media posts.")
     else:
-        await message.reply("**❌ Failed to turn ON the bot. Please try again.**")
+        await message.reply("**❌ Failed to turn ON the bot for you. Please try again.**")
 
 @Client.on_message(filters.command("bot_off"))
 async def bot_off_cmd(bot, message):
-    success = await set_bot_status(False)
+    user_id = message.from_user.id
+    success = await set_user_bot_status(user_id, False)
     if success:
-        await message.reply("**🔴 Bot is now OFF!**\n\nAutomatic caption feature is **DISABLED**. Bot will not modify any captions.")
+        await message.reply("**🔴 Bot is now OFF for you!**\n\nAutomatic caption feature is **DISABLED** for your account. Bot will not modify your captions.")
     else:
-        await message.reply("**❌ Failed to turn OFF the bot. Please try again.**")
+        await message.reply("**❌ Failed to turn OFF the bot for you. Please try again.**")
 
 @Client.on_message(filters.command("bot_status"))
 async def bot_status_cmd(bot, message):
-    status = await get_bot_status()
+    user_id = message.from_user.id
+    status = await get_user_bot_status(user_id)
     total_caps = await total_random_captions()
     
     if status:
-        status_text = "**🟢 Bot Status: ON**\n\n✅ Automatic caption feature is **ENABLED**\n📊 Total Random Captions: `{}`".format(total_caps)
+        status_text = f"**🟢 Your Bot Status: ON**\n\n✅ Automatic caption feature is **ENABLED** for your account\n📊 Total Random Captions: `{total_caps}`"
     else:
-        status_text = "**🔴 Bot Status: OFF**\n\n❌ Automatic caption feature is **DISABLED**\n📊 Total Random Captions: `{}`".format(total_caps)
+        status_text = f"**🔴 Your Bot Status: OFF**\n\n❌ Automatic caption feature is **DISABLED** for your account\n📊 Total Random Captions: `{total_caps}`"
     
     await message.reply(status_text)
 
@@ -186,13 +191,25 @@ async def preview_captions_cmd(bot, message):
     preview_text += f"**Total Captions Available:** `{len(captions)}`"
     await loading.edit(preview_text)
 
-# Main Caption Processing - WITH ON/OFF CONTROL
+# Main Caption Processing - WITH PER-USER ON/OFF CONTROL
 @Client.on_message(filters.channel | filters.group)
 async def reCap(bot, message):
-    # Check if bot is enabled
-    bot_enabled = await get_bot_status()
-    if not bot_enabled:
-        return  # Bot is OFF, don't process captions
+    # Get user ID from message
+    user_id = None
+    if message.from_user:
+        user_id = message.from_user.id
+    elif message.sender_chat:
+        # For channel posts, we can't get individual user ID
+        # You may want to handle this differently based on your needs
+        return
+    
+    if not user_id:
+        return
+    
+    # Check if bot is enabled for this specific user
+    user_bot_enabled = await get_user_bot_status(user_id)
+    if not user_bot_enabled:
+        return  # Bot is OFF for this user, don't process captions
     
     default_caption = message.caption or ""
     
@@ -245,7 +262,7 @@ async def reCap(bot, message):
         except FloodWait as e:
             await asyncio.sleep(e.x)
         except Exception as e:
-            print(f"Error processing media: {e}")
+            print(f"Error processing media for user {user_id}: {e}")
     
     return
 
@@ -288,10 +305,10 @@ async def about(bot, query):
         text=script.ABOUT_TXT,
         reply_markup=InlineKeyboardMarkup(
             [[
-            InlineKeyboardButton('ʜᴏᴡ ᴛᴏ ᴜsᴇ ᴍᴇ ❓', callback_data='help')
+            InlineKeyboardButton('Help', callback_data='help')
             ],[
             InlineKeyboardButton('↩ ʙᴀᴄᴋ', callback_data='start')
             ]]
         ),
-        disable_web_page_preview=True 
+        disable_web_page_preview=True
     )
