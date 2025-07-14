@@ -9,7 +9,7 @@ db = client.captions_with_chnl
 users = db.users
 random_captions = db.random_captions
 user_settings = db.user_settings
-user_filters = db.user_filters  # New collection for word filters
+user_filters = db.user_filters
 
 # User Functions
 async def insert(user_id):
@@ -36,9 +36,8 @@ async def get_user_bot_status(user_id):
     try:
         user_setting = await user_settings.find_one({"_id": user_id})
         if user_setting:
-            return user_setting.get("bot_enabled", True)  # Default is True (ON)
+            return user_setting.get("bot_enabled", True)
         else:
-            # Create default setting for new user
             await user_settings.insert_one({
                 "_id": user_id, 
                 "bot_enabled": True,
@@ -67,18 +66,18 @@ async def set_user_bot_status(user_id, enabled):
 
 async def get_default_bot_status():
     """Get default bot status for new users"""
-    return True  # Default is always ON for new users
+    return True
 
-# Old global functions kept for backward compatibility (if needed)
+# Old global functions kept for backward compatibility
 async def get_bot_status():
-    """Get global bot status (deprecated - use get_user_bot_status instead)"""
-    return True  # Always return True since we're using per-user settings now
+    """Get global bot status (deprecated)"""
+    return True
 
 async def set_bot_status(enabled):
-    """Set global bot status (deprecated - use set_user_bot_status instead)"""
-    return True  # Always return True since we're using per-user settings now
+    """Set global bot status (deprecated)"""
+    return True
 
-# Random Caption Functions (unchanged)
+# Random Caption Functions
 async def add_random_caption(caption_text):
     """Add a new random caption to database"""
     caption_data = {"caption": caption_text}
@@ -91,10 +90,7 @@ async def get_random_caption():
         if total_captions == 0:
             return None
         
-        # Get random number between 0 and total_captions-1
         random_skip = random.randint(0, total_captions - 1)
-        
-        # Get random caption
         cursor = random_captions.find({}).skip(random_skip).limit(1)
         random_caption_doc = await cursor.to_list(length=1)
         
@@ -149,11 +145,10 @@ async def total_disabled_users():
     count = await user_settings.count_documents({"bot_enabled": False})
     return count
 
-# NEW: User Filter Functions
+# User Filter Functions
 async def add_user_filter(user_id, words):
     """Add filtered words for specific user"""
     try:
-        # Convert words to lowercase for case-insensitive matching
         filtered_words = [word.strip().lower() for word in words if word.strip()]
         
         await user_filters.update_one(
@@ -195,16 +190,12 @@ def remove_filtered_words(text, filtered_words):
     if not text or not filtered_words:
         return text
     
-    # Create a copy of the text
     cleaned_text = text
     
-    # Remove each filtered word (case-insensitive)
     for word in filtered_words:
-        # Use regex to remove the word (whole word matching)
         pattern = r'\b' + re.escape(word) + r'\b'
         cleaned_text = re.sub(pattern, '', cleaned_text, flags=re.IGNORECASE)
     
-    # Clean up extra spaces
     cleaned_text = re.sub(r'\s+', ' ', cleaned_text).strip()
     
     return cleaned_text
