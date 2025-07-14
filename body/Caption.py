@@ -157,12 +157,39 @@ async def preview_captions_cmd(bot, message):
     preview_text += f"**Total Captions Available:** `{len(captions)}`"
     await loading.edit(preview_text)
 
-# Improved media group logic: only edit one photo in a group
+@Client.on_message(filters.command("bot_on"))
+async def bot_on_cmd(bot, message):
+    chat_id = message.chat.id
+    await set_bot_status(chat_id, True)
+    await message.reply("**✅ Bot is now ON! Random captions will be added to media posts.**")
+
+@Client.on_message(filters.command("bot_off"))
+async def bot_off_cmd(bot, message):
+    chat_id = message.chat.id
+    await set_bot_status(chat_id, False)
+    await message.reply("**❌ Bot is now OFF! Random captions will not be added.**")
+
+@Client.on_message(filters.command("bot_status"))
+async def bot_status_cmd(bot, message):
+    chat_id = message.chat.id
+    status = await get_bot_status(chat_id)
+    status_text = "**ON** ✅" if status else "**OFF** ❌"
+    await message.reply(f"**🤖 Bot Status:** {status_text}")
+
+# Enhanced media group handling with database storage
 @Client.on_message(filters.channel | filters.group)
 async def reCap(bot, message):
     try:
+        # Check if bot is enabled for this chat
+        chat_id = message.chat.id
+        bot_enabled = await get_bot_status(chat_id)
+        if not bot_enabled:
+            return
+
         default_caption = message.caption or ""
         media_found = False
+        
+        # Check for media types
         if message.photo:
             media_found = True
         elif message.video:
@@ -181,11 +208,19 @@ async def reCap(bot, message):
             media_found = True
 
         if media_found:
-            # Only edit one message per media group
+            # Handle media groups with database storage
             if message.media_group_id:
-                if not hasattr(reCap, "edited_media_groups"):
-                    reCap.edited_media_groups = set()
-                if message.media_group_id not in reCap.edited_media_groups:
+                # Add small delay to ensure we get the first message in the group
+                await asyncio.sleep(0.5)
+                
+                # Check if this media group is already processed
+                is_processed = await is_media_group_processed(message.media_group_id)
+                
+                if not is_processed:
+                    # Mark this media group as processed
+                    await mark_media_group_processed(message.media_group_id)
+                    
+                    # Get random caption and apply it
                     random_caption = await get_random_caption()
                     if random_caption:
                         bold_random_caption = f"<b>{random_caption}</b>"
@@ -194,10 +229,15 @@ async def reCap(bot, message):
                             final_caption = f"{bold_random_caption}\n\n{bold_default_caption}"
                         else:
                             final_caption = bold_random_caption
-                        await message.edit_caption(final_caption)
-                        reCap.edited_media_groups.add(message.media_group_id)
-                # else: do not edit the rest in the group
+                        
+                        try:
+                            await message.edit_caption(final_caption)
+                        except Exception as e:
+                            print(f"Error editing caption: {e}")
+                            pass
+                # If already processed, do nothing (this ensures only first photo gets caption)
             else:
+                # Handle single media (not in a group)
                 random_caption = await get_random_caption()
                 if random_caption:
                     bold_random_caption = f"<b>{random_caption}</b>"
@@ -206,8 +246,21 @@ async def reCap(bot, message):
                         final_caption = f"{bold_random_caption}\n\n{bold_default_caption}"
                     else:
                         final_caption = bold_random_caption
-                    await message.edit_caption(final_caption)
+                    
+                    try:
+                        await message.edit_caption(final_caption)
+                    except Exception as e:
+                        print(f"Error editing caption: {e}")
+                        pass
+                        
     except FloodWait as e:
         await asyncio.sleep(e.x)
     except Exception as e:
+        print(f"Error in reCap: {e}")
         pass
+
+# Cleanup old media group records (run periodically)
+@Client.on_message(filters.private & filters.user(ADMIN) & filters.command("cleanup_media_groups"))
+async def cleanup_media_groups_cmd(bot, message):
+    await cleanup_old_media_groups()
+    await message.reply("**✅ Old media group records cleaned up successfully!**")
