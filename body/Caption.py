@@ -77,6 +77,35 @@ async def restart_bot(b, m):
     await silicon.edit("**✅️ 𝙱𝙾𝚃 𝙸𝚂 𝚁𝙴𝚂𝚃𝙰𝚁𝚃𝙴𝙳. 𝙽𝙾𝚆 𝚈𝙾𝚄 𝙲𝙰𝙽 𝚄𝚂𝙴 𝙼𝙴**")
     os.execl(sys.executable, sys.executable, *sys.argv)
 
+# Bot ON/OFF Commands - ONLY ADMIN
+@Client.on_message(filters.private & filters.user(ADMIN) & filters.command("bot_on"))
+async def bot_on_cmd(bot, message):
+    success = await set_bot_status(True)
+    if success:
+        await message.reply("**✅ Bot is now ON!**\n\nAutomatic caption feature is **ENABLED**. Bot will add random captions to all media posts.")
+    else:
+        await message.reply("**❌ Failed to turn ON the bot. Please try again.**")
+
+@Client.on_message(filters.private & filters.user(ADMIN) & filters.command("bot_off"))
+async def bot_off_cmd(bot, message):
+    success = await set_bot_status(False)
+    if success:
+        await message.reply("**🔴 Bot is now OFF!**\n\nAutomatic caption feature is **DISABLED**. Bot will not modify any captions.")
+    else:
+        await message.reply("**❌ Failed to turn OFF the bot. Please try again.**")
+
+@Client.on_message(filters.command("bot_status"))
+async def bot_status_cmd(bot, message):
+    status = await get_bot_status()
+    total_caps = await total_random_captions()
+    
+    if status:
+        status_text = "**🟢 Bot Status: ON**\n\n✅ Automatic caption feature is **ENABLED**\n📊 Total Random Captions: `{}`".format(total_caps)
+    else:
+        status_text = "**🔴 Bot Status: OFF**\n\n❌ Automatic caption feature is **DISABLED**\n📊 Total Random Captions: `{}`".format(total_caps)
+    
+    await message.reply(status_text)
+
 # Random Caption Commands - ONLY ADMIN CAN MANAGE
 @Client.on_message(filters.private & filters.user(ADMIN) & filters.command("add_caption"))
 async def add_caption_cmd(bot, message):
@@ -157,43 +186,14 @@ async def preview_captions_cmd(bot, message):
     preview_text += f"**Total Captions Available:** `{len(captions)}`"
     await loading.edit(preview_text)
 
-# Helper Functions
-def extract_language(text):
-    if not text:
-        return "Hindi-English"
-    language_pattern = r'\b(Hindi|English|Tamil|Telugu|Malayalam|Kannada|Hin|Eng|Tam|Tel|Mal|Kan)\b'
-    languages = set(re.findall(language_pattern, text, re.IGNORECASE))
-    if not languages:
-        return "Hindi-English"
-    return ", ".join(sorted(languages, key=str.lower))
-
-def extract_year(text):
-    if not text:
-        return None
-    match = re.search(r'\b(19\d{2}|20\d{2})\b', text)
-    return match.group(1) if match else None
-
-def get_file_info(media_obj):
-    """Extract file information from media object"""
-    file_info = {
-        'name': 'Unknown',
-        'size': 0,
-        'type': 'Unknown'
-    }
-    
-    if hasattr(media_obj, 'file_name') and media_obj.file_name:
-        file_info['name'] = media_obj.file_name
-    elif hasattr(media_obj, 'file_unique_id'):
-        file_info['name'] = f"file_{media_obj.file_unique_id}"
-    
-    if hasattr(media_obj, 'file_size'):
-        file_info['size'] = media_obj.file_size
-    
-    return file_info
-
-# Main Caption Processing - RANDOM CAPTION ON TOP + ORIGINAL ON BOTTOM
+# Main Caption Processing - WITH ON/OFF CONTROL
 @Client.on_message(filters.channel | filters.group)
 async def reCap(bot, message):
+    # Check if bot is enabled
+    bot_enabled = await get_bot_status()
+    if not bot_enabled:
+        return  # Bot is OFF, don't process captions
+    
     default_caption = message.caption or ""
     
     # Check if message has any media
@@ -248,19 +248,6 @@ async def reCap(bot, message):
             print(f"Error processing media: {e}")
     
     return
-
-# Size conversion function
-def get_size(size):
-    if size == 0:
-        return "Unknown"
-    
-    units = ["Bytes", "KB", "MB", "GB", "TB", "PB", "EB"]
-    size = float(size)
-    i = 0
-    while size >= 1024.0 and i < len(units) - 1:
-        i += 1
-        size /= 1024.0
-    return "%.2f %s" % (size, units[i])
 
 # Callback Query Handlers
 @Client.on_callback_query(filters.regex(r'^start'))
