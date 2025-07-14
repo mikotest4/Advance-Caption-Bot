@@ -6,6 +6,7 @@ client = motor.motor_asyncio.AsyncIOMotorClient(MONGO_DB)
 db = client.captions_with_chnl
 users = db.users
 random_captions = db.random_captions
+bot_settings = db.bot_settings
 
 # User Functions
 async def insert(user_id):
@@ -25,6 +26,34 @@ async def getid():
 
 async def delete(id):
     await users.delete_one(id)
+
+# Bot Settings Functions
+async def get_bot_status():
+    """Get current bot status (ON/OFF)"""
+    try:
+        status = await bot_settings.find_one({"_id": "bot_status"})
+        if status:
+            return status.get("enabled", True)  # Default is True (ON)
+        else:
+            # Create default setting
+            await bot_settings.insert_one({"_id": "bot_status", "enabled": True})
+            return True
+    except Exception as e:
+        print(f"Error getting bot status: {e}")
+        return True
+
+async def set_bot_status(enabled):
+    """Set bot status (ON/OFF)"""
+    try:
+        await bot_settings.update_one(
+            {"_id": "bot_status"},
+            {"$set": {"enabled": enabled}},
+            upsert=True
+        )
+        return True
+    except Exception as e:
+        print(f"Error setting bot status: {e}")
+        return False
 
 # Random Caption Functions
 async def add_random_caption(caption_text):
