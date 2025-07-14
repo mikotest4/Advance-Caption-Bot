@@ -18,15 +18,44 @@ async def strtCap(bot, message):
     keyboard = InlineKeyboardMarkup(
         [
             [
-                InlineKeyboardButton("➕️ ᴀᴅᴅ ᴍᴇ ᴛᴏ ʏᴏᴜʀ ᴄʜᴀɴɴᴇʟ ➕️", url=f"https://t.me/CustomCaptionBot?startchannel=true")
+                InlineKeyboardButton("M", callback_data="m"),
+                InlineKeyboardButton("A", callback_data="a"),
+                InlineKeyboardButton("S", callback_data="s"),
+                InlineKeyboardButton("T", callback_data="t"),
+                InlineKeyboardButton("E", callback_data="e"),
+                InlineKeyboardButton("R", callback_data="r")
+            ],
+            [
+                InlineKeyboardButton("🔥 MAKE ME YOURS 🔥", url=f"https://t.me/CustomCaptionBot?startchannel=true"),
+                InlineKeyboardButton("🎭 MY MASTER 🎭", url=f"https://t.me/Silicon_Bot_Update")
             ]
         ]
     )
     await message.reply_photo(
         photo=SILICON_PIC,
-        caption=f"<b>Hᴇʟʟᴏ {message.from_user.mention}\n\nɪ ᴀᴍ ᴀᴜᴛᴏ ᴄᴀᴘᴛɪᴏɴ ʙᴏᴛ ᴡɪᴛʜ ᴄᴜsᴛᴏᴍ ᴄᴀᴘᴛɪᴏɴ ᴀɴᴅ ʀᴀɴᴅᴏᴍ ᴄᴀᴘᴛɪᴏɴ ꜰᴇᴀᴛᴜʀᴇ.\n\nFᴏʀ ᴍᴏʀᴇ ɪɴғᴏ ʜᴏᴡ ᴛᴏ ᴜsᴇ ᴍᴇ ᴄʟɪᴄᴋ ᴏɴ ʜᴇʟᴘ ʙᴜᴛᴛᴏɴ ɢɪᴠᴇɴ ʙᴇʟᴏᴡ.\n\nMᴀɪɴᴛᴀɪɴᴇᴅ ʙʏ »<a href='https://t.me/Silicon_Bot_Update'>Sɪʟɪᴄᴏɴ Bᴏᴛᴢ</a></b>",
+        caption=f"""<b>🎊 Welcome to the Caption Bot 🎊
+
+This bot edits captions in your Telegram channels automatically 😉
+
+Add me to your channel as admin and start posting ⚡️
+
+Hey {message.from_user.mention}! Ready to make your captions awesome? 🚀</b>""",
         reply_markup=keyboard
     )
+
+@Client.on_callback_query(filters.regex(r'^[master]'))
+async def master_callback(bot, query):
+    letters = {
+        "m": "M",
+        "a": "A", 
+        "s": "S",
+        "t": "T",
+        "e": "E",
+        "r": "R"
+    }
+    
+    letter = letters.get(query.data, "?")
+    await query.answer(f"You clicked: {letter}", show_alert=True)
 
 @Client.on_message(filters.private & filters.user(ADMIN) & filters.command(["total_users"]))
 async def all_db_users_here(client, message):
