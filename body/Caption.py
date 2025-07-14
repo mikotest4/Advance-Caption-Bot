@@ -18,22 +18,22 @@ async def strtCap(bot, message):
     keyboard = InlineKeyboardMarkup(
         [
             [
-                InlineKeyboardButton("Y", url="https://t.me/Yae_X_Miko"),
-                InlineKeyboardButton("A", url="https://t.me/Yae_X_Miko"),
-                InlineKeyboardButton("E", url="https://t.me/Yae_X_Miko"),
-                InlineKeyboardButton("M", url="https://t.me/Yae_X_Miko"),
-                InlineKeyboardButton("I", url="https://t.me/Yae_X_Miko"),
-                InlineKeyboardButton("K", url="https://t.me/Yae_X_Miko"),
-                InlineKeyboardButton("O", url="https://t.me/Yae_X_Miko")
+                InlineKeyboardButton("ʏ", url="https://t.me/Yae_X_Miko"),
+                InlineKeyboardButton("ᴀ", url="https://t.me/Yae_X_Miko"),
+                InlineKeyboardButton("ᴇ", url="https://t.me/Yae_X_Miko"),
+                InlineKeyboardButton("ᴍ", url="https://t.me/Yae_X_Miko"),
+                InlineKeyboardButton("ɪ", url="https://t.me/Yae_X_Miko"),
+                InlineKeyboardButton("ᴋ", url="https://t.me/Yae_X_Miko"),
+                InlineKeyboardButton("ᴏ", url="https://t.me/Yae_X_Miko")
             ],
             [
-                InlineKeyboardButton("🔥 MAKE ME YOURS 🔥", url=f"https://t.me/CustomCaptionBot?startchannel=true"),
-                InlineKeyboardButton("🎭 MY MASTER 🎭", url=f"https://t.me/Silicon_Bot_Update")
+                InlineKeyboardButton("ᴍᴀᴋᴇ ᴍᴇ ʏᴏᴜʀ", url=f"https://t.me/Testmikosbot?startchannel=true"),
+                InlineKeyboardButton("ᴍʏ ᴍᴀsᴛᴇʀ", url=f"https://t.me/Yae_X_Miko")
             ]
         ]
     )
     await message.reply_photo(
-        photo=SILICON_PIC,
+        photo=START_PIC,
         caption=f"""<b>🎊 Welcome to the Caption Bot 🎊
 
 This bot edits captions in your Telegram channels automatically 😉
