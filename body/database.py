@@ -2,12 +2,14 @@ import motor.motor_asyncio
 from info import *
 import random
 from datetime import datetime
+import re
 
 client = motor.motor_asyncio.AsyncIOMotorClient(MONGO_DB)
 db = client.captions_with_chnl
 users = db.users
 random_captions = db.random_captions
-user_settings = db.user_settings  # New collection for per-user settings
+user_settings = db.user_settings
+user_filters = db.user_filters  # New collection for word filters
 
 # User Functions
 async def insert(user_id):
@@ -145,4 +147,69 @@ async def total_enabled_users():
 async def total_disabled_users():
     """Get count of users who have bot disabled"""
     count = await user_settings.count_documents({"bot_enabled": False})
+    return count
+
+# NEW: User Filter Functions
+async def add_user_filter(user_id, words):
+    """Add filtered words for specific user"""
+    try:
+        # Convert words to lowercase for case-insensitive matching
+        filtered_words = [word.strip().lower() for word in words if word.strip()]
+        
+        await user_filters.update_one(
+            {"_id": user_id},
+            {"$set": {
+                "filtered_words": filtered_words,
+                "updated_at": datetime.now()
+            }},
+            upsert=True
+        )
+        return True
+    except Exception as e:
+        print(f"Error adding user filter: {e}")
+        return False
+
+async def get_user_filters(user_id):
+    """Get filtered words for specific user"""
+    try:
+        user_filter = await user_filters.find_one({"_id": user_id})
+        if user_filter:
+            return user_filter.get("filtered_words", [])
+        else:
+            return []
+    except Exception as e:
+        print(f"Error getting user filters: {e}")
+        return []
+
+async def clear_user_filters(user_id):
+    """Clear all filtered words for specific user"""
+    try:
+        await user_filters.delete_one({"_id": user_id})
+        return True
+    except Exception as e:
+        print(f"Error clearing user filters: {e}")
+        return False
+
+def remove_filtered_words(text, filtered_words):
+    """Remove filtered words from text"""
+    if not text or not filtered_words:
+        return text
+    
+    # Create a copy of the text
+    cleaned_text = text
+    
+    # Remove each filtered word (case-insensitive)
+    for word in filtered_words:
+        # Use regex to remove the word (whole word matching)
+        pattern = r'\b' + re.escape(word) + r'\b'
+        cleaned_text = re.sub(pattern, '', cleaned_text, flags=re.IGNORECASE)
+    
+    # Clean up extra spaces
+    cleaned_text = re.sub(r'\s+', ' ', cleaned_text).strip()
+    
+    return cleaned_text
+
+async def total_users_with_filters():
+    """Get count of users who have word filters set"""
+    count = await user_filters.count_documents({})
     return count
