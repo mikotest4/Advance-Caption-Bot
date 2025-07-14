@@ -194,64 +194,45 @@ async def preview_captions_cmd(bot, message):
 @Client.on_message(filters.channel | filters.group)
 async def reCap(bot, message):
     try:
-        print(f"Processing message in: {message.chat.title if message.chat else 'Unknown'}")
-        
         user_id = None
         if message.from_user:
             user_id = message.from_user.id
-            print(f"Message from user: {user_id}")
         elif message.sender_chat:
             user_id = message.sender_chat.id
-            print(f"Message from channel: {user_id}")
         else:
-            print("No user info available, processing anyway...")
             user_id = message.chat.id
         
         if user_id:
             try:
                 user_bot_enabled = await get_user_bot_status(user_id)
                 if not user_bot_enabled:
-                    print(f"Bot disabled for user/channel: {user_id}")
                     return
             except Exception as e:
-                print(f"Error checking bot status for {user_id}: {e}")
                 pass
         
         default_caption = message.caption or ""
         
         media_found = False
-        media_type = "Unknown"
         
         if message.photo:
             media_found = True
-            media_type = "Photo"
         elif message.video:
             media_found = True
-            media_type = "Video"
         elif message.audio:
             media_found = True
-            media_type = "Audio"
         elif message.document:
             media_found = True
-            media_type = "Document"
         elif message.voice:
             media_found = True
-            media_type = "Voice"
         elif message.video_note:
             media_found = True
-            media_type = "Video Note"
         elif message.animation:
             media_found = True
-            media_type = "GIF"
         elif message.sticker:
             media_found = True
-            media_type = "Sticker"
-        
-        print(f"Media found: {media_found}, Type: {media_type}")
         
         if media_found:
             random_caption = await get_random_caption()
-            print(f"Random caption: {random_caption[:50] if random_caption else 'None'}...")
             
             if random_caption:
                 if default_caption:
@@ -259,22 +240,12 @@ async def reCap(bot, message):
                 else:
                     final_caption = random_caption
                 
-                print(f"Final caption length: {len(final_caption)}")
-                
                 await message.edit_caption(final_caption)
-                print("Caption edited successfully!")
-            else:
-                print("No random caption available in database")
-        else:
-            print("No media found, skipping...")
             
     except FloodWait as e:
-        print(f"FloodWait error: {e.x} seconds")
         await asyncio.sleep(e.x)
     except Exception as e:
-        print(f"Error processing message: {e}")
-        import traceback
-        traceback.print_exc()
+        pass
 
 @Client.on_callback_query(filters.regex(r'^start'))
 async def start(bot, query):
